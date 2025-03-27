@@ -4,7 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import AnimatedLayout from "@/components/ui/AnimatedLayout";
-import { Edit, User, Heart, Activity } from "lucide-react";
+import { Edit, User, Heart, Activity, CreditCard, FileText, Check } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export default function Profile() {
   const { user } = useAuth();
@@ -118,6 +119,146 @@ export default function Profile() {
                 <Activity size={16} />
                 <span>Update Health Information</span>
               </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Payment Methods Card */}
+        <Card>
+          <CardHeader className="bg-primary/5 border-b">
+            <div className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5 text-primary" />
+              <div>
+                <CardTitle>Payment Methods</CardTitle>
+                <CardDescription>Manage your payment options</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="space-y-4">
+              <div className="border rounded-lg p-4 flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <div className="bg-blue-600 text-white p-1 rounded">
+                    <span className="font-bold text-xs">VISA</span>
+                  </div>
+                  <div>
+                    <p className="font-medium">Visa ending in 4242</p>
+                    <p className="text-sm text-muted-foreground">Expires 12/25</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-green-600 bg-green-50 px-2 py-1 rounded">Default</span>
+                </div>
+              </div>
+              
+              <div className="flex justify-end">
+                <Button variant="outline" className="flex items-center gap-2">
+                  <CreditCard size={16} />
+                  <span>Add Payment Method</span>
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Billing History */}
+        <Card>
+          <CardHeader className="bg-primary/5 border-b">
+            <div className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-primary" />
+              <div>
+                <CardTitle>Billing History</CardTitle>
+                <CardDescription>Your recent payment history</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-6">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow>
+                  <TableCell className="font-medium">Premium Membership</TableCell>
+                  <TableCell>Oct 1, 2023</TableCell>
+                  <TableCell>$99.00</TableCell>
+                  <TableCell>
+                    <span className="text-green-600 bg-green-50 px-2 py-1 rounded text-xs font-medium">Paid</span>
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">Premium Membership</TableCell>
+                  <TableCell>Sep 1, 2023</TableCell>
+                  <TableCell>$99.00</TableCell>
+                  <TableCell>
+                    <span className="text-green-600 bg-green-50 px-2 py-1 rounded text-xs font-medium">Paid</span>
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">Premium Membership</TableCell>
+                  <TableCell>Aug 1, 2023</TableCell>
+                  <TableCell>$99.00</TableCell>
+                  <TableCell>
+                    <span className="text-green-600 bg-green-50 px-2 py-1 rounded text-xs font-medium">Paid</span>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+            <div className="mt-4 flex justify-end">
+              <Button variant="outline" size="sm">View All Payments</Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Membership Card */}
+        <Card>
+          <CardHeader className="bg-primary/5 border-b">
+            <CardTitle>Membership</CardTitle>
+            <CardDescription>Your current membership plan and benefits</CardDescription>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="grid md:grid-cols-2 gap-8">
+              <div className="space-y-6">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-muted-foreground">Current Plan</p>
+                  <p className="text-xl font-semibold text-primary">Premium</p>
+                  <span className="inline-block mt-1 text-sm text-green-600 bg-green-50 px-2 py-1 rounded">Active</span>
+                </div>
+                
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-muted-foreground">Expires</p>
+                  <p className="font-medium">December 31, 2023</p>
+                </div>
+                
+                <Button className="w-full sm:w-auto">Manage Membership</Button>
+              </div>
+              
+              <div>
+                <h3 className="font-medium mb-3">Membership Perks</h3>
+                <ul className="space-y-2">
+                  <li className="flex items-center gap-2">
+                    <Check size={16} className="text-green-600" />
+                    <span>Unlimited Access</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check size={16} className="text-green-600" />
+                    <span>Free Towel Service</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check size={16} className="text-green-600" />
+                    <span>1 Free Personal Training/month</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check size={16} className="text-green-600" />
+                    <span>Guest Passes (2/month)</span>
+                  </li>
+                </ul>
+              </div>
             </div>
           </CardContent>
         </Card>
