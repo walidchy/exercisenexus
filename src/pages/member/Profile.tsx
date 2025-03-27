@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import AnimatedLayout from "@/components/ui/AnimatedLayout";
-import { Edit, User } from "lucide-react";
+import { Edit, User, Heart, Activity } from "lucide-react";
 
 export default function Profile() {
   const { user } = useAuth();
@@ -65,6 +65,59 @@ export default function Profile() {
                   <p className="font-medium">Not provided</p>
                 </div>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Health Metrics Card */}
+        <Card>
+          <CardHeader className="bg-primary/5 border-b">
+            <div className="flex items-center gap-2">
+              <Heart className="h-5 w-5 text-primary" />
+              <div>
+                <CardTitle>Health Metrics</CardTitle>
+                <CardDescription>Your latest health and fitness measurements</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-muted-foreground">Height</p>
+                <p className="text-2xl font-semibold">5'11"</p>
+              </div>
+              
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-muted-foreground">Weight</p>
+                <p className="text-2xl font-semibold">180 lbs</p>
+              </div>
+              
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-muted-foreground">Body Fat</p>
+                <p className="text-2xl font-semibold">18%</p>
+              </div>
+              
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-muted-foreground">BMI</p>
+                <p className="text-2xl font-semibold">24.8</p>
+              </div>
+              
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-muted-foreground">Blood Pressure</p>
+                <p className="text-2xl font-semibold">120/80</p>
+              </div>
+              
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-muted-foreground">Resting Heart Rate</p>
+                <p className="text-2xl font-semibold">68 bpm</p>
+              </div>
+            </div>
+            
+            <div className="mt-6 flex justify-end">
+              <Button className="flex items-center gap-2">
+                <Activity size={16} />
+                <span>Update Health Information</span>
+              </Button>
             </div>
           </CardContent>
         </Card>
