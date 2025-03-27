@@ -13,12 +13,24 @@ import NotFound from "./pages/NotFound";
 
 // Member pages
 import MemberDashboard from "./pages/member/Dashboard";
+import MemberProfile from "./pages/member/Profile";
+import MemberActivities from "./pages/member/Activities";
+import MemberBookings from "./pages/member/Bookings";
 
 // Trainer pages
 import TrainerDashboard from "./pages/trainer/Dashboard";
+import TrainerProfile from "./pages/trainer/Profile";
+import TrainerActivities from "./pages/trainer/Activities";
+import TrainerClients from "./pages/trainer/Clients";
+import TrainerSchedule from "./pages/trainer/Schedule";
 
 // Admin pages
 import AdminDashboard from "./pages/admin/Dashboard";
+import AdminMembers from "./pages/admin/Members";
+import AdminTrainers from "./pages/admin/Trainers";
+import AdminActivities from "./pages/admin/Activities";
+import AdminReports from "./pages/admin/Reports";
+import AdminSettings from "./pages/admin/Settings";
 
 // AppLayout
 import { AppLayout } from "./components/layout/AppLayout";
@@ -38,18 +50,30 @@ const App = () => (
             {/* Member routes */}
             <Route path="/member" element={<AppLayout allowedRoles={["member"]} />}>
               <Route index element={<MemberDashboard />} />
+              <Route path="profile" element={<MemberProfile />} />
+              <Route path="activities" element={<MemberActivities />} />
+              <Route path="bookings" element={<MemberBookings />} />
               {/* Add more member routes here */}
             </Route>
             
             {/* Trainer routes */}
             <Route path="/trainer" element={<AppLayout allowedRoles={["trainer"]} />}>
               <Route index element={<TrainerDashboard />} />
+              <Route path="profile" element={<TrainerProfile />} />
+              <Route path="activities" element={<TrainerActivities />} />
+              <Route path="clients" element={<TrainerClients />} />
+              <Route path="schedule" element={<TrainerSchedule />} />
               {/* Add more trainer routes here */}
             </Route>
             
             {/* Admin routes */}
             <Route path="/admin" element={<AppLayout allowedRoles={["admin"]} />}>
               <Route index element={<AdminDashboard />} />
+              <Route path="members" element={<AdminMembers />} />
+              <Route path="trainers" element={<AdminTrainers />} />
+              <Route path="activities" element={<AdminActivities />} />
+              <Route path="reports" element={<AdminReports />} />
+              <Route path="settings" element={<AdminSettings />} />
               {/* Add more admin routes here */}
             </Route>
             
