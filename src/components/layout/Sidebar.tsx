@@ -15,7 +15,8 @@ import {
   User,
   ChevronLeft,
   ChevronRight,
-  BarChart
+  BarChart,
+  CreditCard
 } from "lucide-react";
 
 interface SidebarLinkProps {
@@ -67,6 +68,7 @@ const getMemberLinks = () => [
   { to: "/member/profile", icon: <User size={18} />, label: "Profile" },
   { to: "/member/activities", icon: <Activity size={18} />, label: "Activities" },
   { to: "/member/bookings", icon: <Calendar size={18} />, label: "My Bookings" },
+  { to: "/member/membership-plans", icon: <CreditCard size={18} />, label: "Membership Plans" },
 ];
 
 const getTrainerLinks = () => [

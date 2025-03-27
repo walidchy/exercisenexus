@@ -16,6 +16,7 @@ import MemberDashboard from "./pages/member/Dashboard";
 import MemberProfile from "./pages/member/Profile";
 import MemberActivities from "./pages/member/Activities";
 import MemberBookings from "./pages/member/Bookings";
+import MembershipPlans from "./pages/member/MembershipPlans";
 
 // Trainer pages
 import TrainerDashboard from "./pages/trainer/Dashboard";
@@ -53,6 +54,7 @@ const App = () => (
               <Route path="profile" element={<MemberProfile />} />
               <Route path="activities" element={<MemberActivities />} />
               <Route path="bookings" element={<MemberBookings />} />
+              <Route path="membership-plans" element={<MembershipPlans />} />
               {/* Add more member routes here */}
             </Route>
             
