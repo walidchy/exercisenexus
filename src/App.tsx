@@ -5,7 +5,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./hooks/useAuth";
-import { AppLayout } from "./components/layout/AppLayout";
 
 // Pages
 import Index from "./pages/Index";
@@ -21,6 +20,9 @@ import TrainerDashboard from "./pages/trainer/Dashboard";
 // Admin pages
 import AdminDashboard from "./pages/admin/Dashboard";
 
+// AppLayout
+import { AppLayout } from "./components/layout/AppLayout";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -28,8 +30,6 @@ const App = () => (
     <TooltipProvider>
       <BrowserRouter>
         <AuthProvider>
-          <Toaster />
-          <Sonner position="top-right" />
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<Index />} />
@@ -56,6 +56,9 @@ const App = () => (
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          
+          <Toaster />
+          <Sonner position="top-right" />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
