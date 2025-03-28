@@ -33,6 +33,8 @@ import AdminTrainers from "./pages/admin/Trainers";
 import AdminActivities from "./pages/admin/Activities";
 import AdminReports from "./pages/admin/Reports";
 import AdminSettings from "./pages/admin/Settings";
+import UserVerification from "./pages/admin/UserVerification";
+import AddUser from "./pages/admin/AddUser";
 
 // AppLayout
 import { AppLayout } from "./components/layout/AppLayout";
@@ -76,6 +78,8 @@ const App = () => (
               <Route path="members" element={<AdminMembers />} />
               <Route path="trainers" element={<AdminTrainers />} />
               <Route path="activities" element={<AdminActivities />} />
+              <Route path="user-verification" element={<UserVerification />} />
+              <Route path="add-user" element={<AddUser />} />
               <Route path="reports" element={<AdminReports />} />
               <Route path="settings" element={<AdminSettings />} />
               {/* Add more admin routes here */}

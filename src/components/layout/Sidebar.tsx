@@ -16,7 +16,9 @@ import {
   ChevronLeft,
   ChevronRight,
   BarChart,
-  CreditCard
+  CreditCard,
+  UserPlus,
+  ShieldCheck
 } from "lucide-react";
 
 interface SidebarLinkProps {
@@ -84,6 +86,8 @@ const getAdminLinks = () => [
   { to: "/admin/members", icon: <Users size={18} />, label: "Members" },
   { to: "/admin/trainers", icon: <Activity size={18} />, label: "Trainers" },
   { to: "/admin/activities", icon: <Calendar size={18} />, label: "Activities" },
+  { to: "/admin/user-verification", icon: <ShieldCheck size={18} />, label: "User Verification" },
+  { to: "/admin/add-user", icon: <UserPlus size={18} />, label: "Add User" },
   { to: "/admin/reports", icon: <BarChart size={18} />, label: "Reports" },
   { to: "/admin/settings", icon: <Settings size={18} />, label: "Settings" },
 ];

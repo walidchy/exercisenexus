@@ -18,7 +18,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { ArrowRight } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ArrowRight, AlertCircle } from "lucide-react";
 
 // Form schema
 const formSchema = z.object({
@@ -92,6 +93,13 @@ const LoginForm = () => {
           Sign in to access your account
         </p>
       </div>
+      
+      <Alert variant="info" className="bg-blue-50 text-blue-800 border-blue-100">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>
+          New accounts require admin verification before access.
+        </AlertDescription>
+      </Alert>
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">

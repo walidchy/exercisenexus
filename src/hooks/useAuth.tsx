@@ -12,6 +12,7 @@ interface User {
   email: string;
   role: UserRole;
   avatar?: string;
+  isVerified: boolean;
 }
 
 interface AuthContextType {
@@ -19,6 +20,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  verifyUser: (userId: number) => Promise<void>;
 }
 
 // Create context with default values
@@ -27,6 +29,7 @@ const AuthContext = createContext<AuthContextType>({
   isLoading: true,
   login: async () => {},
   logout: () => {},
+  verifyUser: async () => {},
 });
 
 // This would connect to your Laravel API in a real implementation
@@ -46,6 +49,7 @@ const mockApiLogin = async (email: string, password: string): Promise<User> => {
       name: "John Member",
       email: "member@example.com",
       role: "member",
+      isVerified: true,
     };
   } else if (email.includes("trainer")) {
     return {
@@ -53,6 +57,7 @@ const mockApiLogin = async (email: string, password: string): Promise<User> => {
       name: "Sarah Trainer",
       email: "trainer@example.com",
       role: "trainer",
+      isVerified: true,
     };
   } else if (email.includes("admin")) {
     return {
@@ -60,15 +65,17 @@ const mockApiLogin = async (email: string, password: string): Promise<User> => {
       name: "Admin User",
       email: "admin@example.com",
       role: "admin",
+      isVerified: true,
     };
   }
   
-  // Default to member for this demo
+  // Default to member for this demo, but set as unverified
   return {
     id: 4,
     name: "Default User",
     email: email,
     role: "member",
+    isVerified: false,
   };
 };
 
@@ -106,6 +113,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // In a real app, this would call your Laravel API
       const user = await mockApiLogin(email, password);
       
+      // Check if user is verified
+      if (!user.isVerified) {
+        toast.error("Your account is pending verification. Please contact admin.");
+        setIsLoading(false);
+        return;
+      }
+      
       // Save user to state and localStorage
       setUser(user);
       localStorage.setItem("gym_user", JSON.stringify(user));
@@ -129,6 +143,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // User verification function (for admin)
+  const verifyUser = async (userId: number) => {
+    try {
+      // In a real app, this would call your API to verify the user
+      // Mock verification for demo
+      toast.success("User verified successfully");
+      return Promise.resolve();
+    } catch (error) {
+      console.error("Verification error:", error);
+      toast.error("Verification failed: " + (error as Error).message);
+      throw error;
+    }
+  };
+
   // Logout function
   const logout = () => {
     setUser(null);
@@ -138,7 +166,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, logout, verifyUser }}>
       {children}
     </AuthContext.Provider>
   );
@@ -154,11 +182,21 @@ export const useRequireAuth = (allowedRoles?: UserRole[]) => {
   useEffect(() => {
     if (!isLoading && !user) {
       navigate("/login");
-    } else if (!isLoading && user && allowedRoles && !allowedRoles.includes(user.role)) {
-      // Redirect to the user's default page based on role
-      const homePath = `/${user.role}`;
-      navigate(homePath);
-      toast.error("You don't have permission to access this page");
+    } else if (!isLoading && user) {
+      // Check if user is verified
+      if (!user.isVerified) {
+        navigate("/login");
+        toast.error("Your account is pending verification. Please contact admin.");
+        return;
+      }
+
+      // Check if user has the required role
+      if (allowedRoles && !allowedRoles.includes(user.role)) {
+        // Redirect to the user's default page based on role
+        const homePath = `/${user.role}`;
+        navigate(homePath);
+        toast.error("You don't have permission to access this page");
+      }
     }
   }, [user, isLoading, navigate, allowedRoles]);
   
