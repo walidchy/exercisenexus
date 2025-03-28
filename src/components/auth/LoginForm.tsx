@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -94,7 +93,7 @@ const LoginForm = () => {
         </p>
       </div>
       
-      <Alert variant="info" className="bg-blue-50 text-blue-800 border-blue-100">
+      <Alert className="bg-blue-50 text-blue-800 border-blue-100">
         <AlertCircle className="h-4 w-4" />
         <AlertDescription>
           New accounts require admin verification before access.
