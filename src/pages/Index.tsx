@@ -4,13 +4,14 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 
 const Index = () => {
   const navigate = useNavigate();
+  const [showLearnMoreDialog, setShowLearnMoreDialog] = React.useState(false);
   
   const handleLearnMore = () => {
-    toast.info("Learn more content coming soon!");
-    // In a real app, this would navigate to a features or about page
+    setShowLearnMoreDialog(true);
   };
   
   return (
@@ -112,6 +113,61 @@ const Index = () => {
           </motion.div>
         ))}
       </motion.div>
+      
+      {/* Learn More Dialog */}
+      <Dialog open={showLearnMoreDialog} onOpenChange={setShowLearnMoreDialog}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>About GymPro</DialogTitle>
+            <DialogDescription>
+              Our comprehensive gym management solution
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <h4 className="text-lg font-semibold">Key Features</h4>
+            
+            <div className="space-y-2">
+              <p className="text-sm font-medium">🏋️ For Members:</p>
+              <ul className="list-disc pl-5 space-y-1 text-sm">
+                <li>Easy class and session booking</li>
+                <li>Track your workout progress</li>
+                <li>Manage your membership details</li>
+                <li>View trainer availability</li>
+              </ul>
+            </div>
+            
+            <div className="space-y-2">
+              <p className="text-sm font-medium">👨‍🏫 For Trainers:</p>
+              <ul className="list-disc pl-5 space-y-1 text-sm">
+                <li>Schedule and manage client sessions</li>
+                <li>Track client attendance and progress</li>
+                <li>Create customized workout plans</li>
+                <li>View and update your availability</li>
+              </ul>
+            </div>
+            
+            <div className="space-y-2">
+              <p className="text-sm font-medium">👩‍💼 For Administrators:</p>
+              <ul className="list-disc pl-5 space-y-1 text-sm">
+                <li>Complete member and trainer management</li>
+                <li>Comprehensive reporting tools</li>
+                <li>Facility and equipment tracking</li>
+                <li>User verification and permissions control</li>
+              </ul>
+            </div>
+          </div>
+          
+          <DialogFooter className="flex space-x-2 justify-between">
+            <Button variant="outline" onClick={() => setShowLearnMoreDialog(false)}>Close</Button>
+            <Button onClick={() => {
+              setShowLearnMoreDialog(false);
+              navigate("/register");
+              toast.success("Let's get you registered!");
+            }}>Register Now</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

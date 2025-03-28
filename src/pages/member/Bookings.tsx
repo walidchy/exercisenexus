@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import AnimatedLayout from "@/components/ui/AnimatedLayout";
 import { Calendar, Clock, FileX, Info, MapPin, User } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 // Mock booking data
 const bookings = [
@@ -62,6 +63,8 @@ export default function Bookings() {
   const [bookingToCancel, setBookingToCancel] = useState<number | null>(null);
   const [openDialog, setOpenDialog] = useState<boolean>(false);
   const [localBookings, setLocalBookings] = useState(bookings);
+  const [showBookDialog, setShowBookDialog] = useState<boolean>(false);
+  const navigate = useNavigate();
   
   const filteredBookings = localBookings.filter(booking => {
     if (activeTab === "all") return true;
@@ -83,12 +86,42 @@ export default function Bookings() {
     toast.success("Booking canceled successfully");
   };
 
+  const handleBookNewActivity = () => {
+    setShowBookDialog(true);
+  };
+
+  const handleBookActivity = () => {
+    // Mock booking logic - in a real app, this would send data to an API
+    toast.success("Activity booked successfully!");
+    setShowBookDialog(false);
+    
+    // Mock a new booking being added
+    const newBooking = {
+      id: localBookings.length + 1,
+      activity: "New Activity",
+      trainer: "Available Trainer",
+      date: new Date().toISOString().split('T')[0],
+      time: "10:00 - 11:00",
+      location: "Main Gym",
+      status: "upcoming"
+    };
+    
+    setLocalBookings(prev => [...prev, newBooking]);
+    
+    // Switch to upcoming tab to show the new booking
+    setActiveTab("upcoming");
+  };
+
+  const handleViewAllActivities = () => {
+    navigate("/member/activities");
+  };
+
   return (
     <AnimatedLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold tracking-tight">My Bookings</h1>
-          <Button>Book New Activity</Button>
+          <Button onClick={handleBookNewActivity}>Book New Activity</Button>
         </div>
         
         <Tabs defaultValue="upcoming" className="w-full" onValueChange={setActiveTab}>
@@ -180,14 +213,47 @@ export default function Bookings() {
                 <p className="mt-2 text-muted-foreground">
                   You don't have any {activeTab} bookings.
                 </p>
-                <Button className="mt-4" variant="outline">
-                  Book an Activity
+                <Button className="mt-4" variant="outline" onClick={handleViewAllActivities}>
+                  Browse Activities
                 </Button>
               </div>
             )}
           </TabsContent>
         </Tabs>
       </div>
+      
+      {/* Book New Activity Dialog */}
+      <Dialog open={showBookDialog} onOpenChange={setShowBookDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Book New Activity</DialogTitle>
+            <DialogDescription>
+              Select from available activities to book a session.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="space-y-4">
+              <p className="text-sm font-medium">Popular Activities:</p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {["Yoga Class", "HIIT Training", "Pilates", "Swimming", "Weight Training", "Boxing"].map((activity, index) => (
+                  <Card key={index} className="cursor-pointer hover:border-primary" onClick={handleBookActivity}>
+                    <CardHeader className="py-3 px-4">
+                      <CardTitle className="text-base">{activity}</CardTitle>
+                    </CardHeader>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter className="flex space-x-2 justify-between items-center">
+            <Button variant="outline" onClick={() => setShowBookDialog(false)}>Cancel</Button>
+            <Button onClick={handleViewAllActivities}>View All Activities</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AnimatedLayout>
   );
 }
