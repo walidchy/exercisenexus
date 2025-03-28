@@ -3,9 +3,15 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 const Index = () => {
   const navigate = useNavigate();
+  
+  const handleLearnMore = () => {
+    toast.info("Learn more content coming soon!");
+    // In a real app, this would navigate to a features or about page
+  };
   
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-background to-background/90 px-4">
@@ -60,7 +66,7 @@ const Index = () => {
           </Button>
           
           <Button
-            onClick={() => navigate("/login")}
+            onClick={handleLearnMore}
             variant="outline"
             size="lg"
             className="px-8"

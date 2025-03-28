@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -47,9 +48,11 @@ const LoginForm = () => {
     
     try {
       await login(values.email, values.password);
+      toast.success("Login successful!");
     } catch (error) {
       // Error handling is done in the login function
       console.error("Login submission error:", error);
+      toast.error("Login failed. Please check your credentials.");
     } finally {
       setIsLoading(false);
     }
@@ -58,6 +61,7 @@ const LoginForm = () => {
   // Quick login buttons for demo
   const handleQuickLogin = (role: string) => {
     let email = "";
+    let password = "password";
     
     switch (role) {
       case "member":
@@ -74,9 +78,19 @@ const LoginForm = () => {
     }
     
     form.setValue("email", email);
-    form.setValue("password", "password");
+    form.setValue("password", password);
     
-    form.handleSubmit(onSubmit)();
+    toast.info(`Using demo ${role} account: ${email}`);
+    
+    // Submit the form after a short delay to let the user see the values
+    setTimeout(() => {
+      form.handleSubmit(onSubmit)();
+    }, 500);
+  };
+  
+  const handleForgotPassword = (e: React.MouseEvent) => {
+    e.preventDefault();
+    toast.info("Password reset feature coming soon!");
   };
   
   return (
@@ -126,6 +140,7 @@ const LoginForm = () => {
                   <a
                     href="#"
                     className="text-sm font-medium text-primary hover:underline"
+                    onClick={handleForgotPassword}
                   >
                     Forgot password?
                   </a>

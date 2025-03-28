@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,8 +5,20 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import AnimatedLayout from "@/components/ui/AnimatedLayout";
-import { ArrowUpDown, Calendar, Download, FileEdit, Search, Trash, User, UserPlus } from "lucide-react";
+import { 
+  ArrowUpDown, 
+  Calendar, 
+  Download, 
+  FileEdit, 
+  Search, 
+  Trash, 
+  User, 
+  UserPlus, 
+  Mail,
+  PhoneCall 
+} from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 // Mock member data
 const members = [
@@ -86,6 +97,9 @@ const members = [
 export default function Members() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [showAddDialog, setShowAddDialog] = useState<boolean>(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
+  const [selectedMember, setSelectedMember] = useState<any>(null);
+  const navigate = useNavigate();
   
   const filteredMembers = members.filter(member => {
     if (!searchQuery) return true;
@@ -105,6 +119,37 @@ export default function Members() {
     // In a real app, this would send data to the API
     toast.success("Member added successfully!");
     setShowAddDialog(false);
+  };
+  
+  const handleEditMember = (member: any) => {
+    toast.info(`Editing ${member.name}'s details`);
+    // In a real application, you would navigate to an edit page or open an edit modal
+    setSelectedMember(member);
+  };
+  
+  const handleDeleteMember = (member: any) => {
+    setSelectedMember(member);
+    setShowDeleteDialog(true);
+  };
+  
+  const confirmDeleteMember = () => {
+    // In a real app, this would send a delete request to the API
+    toast.success(`${selectedMember.name} has been removed`);
+    setShowDeleteDialog(false);
+  };
+  
+  const handleViewProfile = (member: any) => {
+    toast.info(`Viewing ${member.name}'s profile`);
+    // In a real application, you would navigate to the member's profile page
+  };
+  
+  const handleExportData = () => {
+    toast.success("Member data exported successfully!");
+    // In a real app, this would generate and download a CSV/Excel file
+  };
+  
+  const handleAddNewMember = () => {
+    navigate("/admin/add-user");
   };
   
   const getStatusColor = (status: string) => {
@@ -135,55 +180,21 @@ export default function Members() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <Button variant="outline" className="flex items-center gap-1">
+            <Button 
+              variant="outline" 
+              className="flex items-center gap-1"
+              onClick={handleExportData}
+            >
               <Download size={16} />
               <span>Export</span>
             </Button>
-            <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-              <DialogTrigger asChild>
-                <Button className="flex items-center gap-1">
-                  <UserPlus size={16} />
-                  <span>Add Member</span>
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Add New Member</DialogTitle>
-                  <DialogDescription>
-                    Create a new member account with basic information.
-                  </DialogDescription>
-                </DialogHeader>
-                <form onSubmit={handleAddMember}>
-                  <div className="grid gap-4 py-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="name">Full Name</Label>
-                      <Input id="name" placeholder="John Doe" required />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input id="email" type="email" placeholder="john@example.com" required />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="phone">Phone Number</Label>
-                      <Input id="phone" placeholder="+1 (555) 123-4567" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="grid gap-2">
-                        <Label htmlFor="membershipType">Membership Type</Label>
-                        <Input id="membershipType" placeholder="Basic" />
-                      </div>
-                      <div className="grid gap-2">
-                        <Label htmlFor="status">Status</Label>
-                        <Input id="status" placeholder="Active" />
-                      </div>
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button type="submit">Add Member</Button>
-                  </DialogFooter>
-                </form>
-              </DialogContent>
-            </Dialog>
+            <Button 
+              className="flex items-center gap-1"
+              onClick={handleAddNewMember}
+            >
+              <UserPlus size={16} />
+              <span>Add Member</span>
+            </Button>
           </div>
         </div>
         
@@ -245,13 +256,29 @@ export default function Members() {
                       </td>
                       <td className="p-4 align-middle">
                         <div className="flex items-center gap-2">
-                          <Button size="icon" variant="outline">
+                          <Button 
+                            size="icon" 
+                            variant="outline" 
+                            onClick={() => handleViewProfile(member)}
+                            title="View Profile"
+                          >
                             <User size={16} />
                           </Button>
-                          <Button size="icon" variant="outline">
+                          <Button 
+                            size="icon" 
+                            variant="outline" 
+                            onClick={() => handleEditMember(member)}
+                            title="Edit Member"
+                          >
                             <FileEdit size={16} />
                           </Button>
-                          <Button size="icon" variant="outline" className="text-destructive">
+                          <Button 
+                            size="icon" 
+                            variant="outline" 
+                            className="text-destructive"
+                            onClick={() => handleDeleteMember(member)}
+                            title="Delete Member"
+                          >
                             <Trash size={16} />
                           </Button>
                         </div>
@@ -264,6 +291,22 @@ export default function Members() {
           </CardContent>
         </Card>
       </div>
+      
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Confirm Deletion</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete {selectedMember?.name}? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex space-x-2 justify-end">
+            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={confirmDeleteMember}>Delete</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AnimatedLayout>
   );
 }
