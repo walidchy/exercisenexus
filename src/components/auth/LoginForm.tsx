@@ -1,10 +1,10 @@
 
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,143 +16,198 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Loader2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import { ArrowRight } from "lucide-react";
 
+// Form schema
 const formSchema = z.object({
-  email: z
-    .string()
-    .min(1, { message: "Email is required" })
-    .email({ message: "Invalid email address" }),
-  password: z
-    .string()
-    .min(6, { message: "Password must be at least 6 characters" }),
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(1, "Password is required"),
+  rememberMe: z.boolean().optional(),
 });
 
-export function LoginForm() {
+type FormValues = z.infer<typeof formSchema>;
+
+const LoginForm = () => {
   const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
   
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: "",
       password: "",
+      rememberMe: false,
     },
   });
   
-  async function onSubmit(data: z.infer<typeof formSchema>) {
+  const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
     
     try {
-      await login(data.email, data.password);
+      await login(values.email, values.password);
     } catch (error) {
-      console.error("Login error:", error);
-      // Error is already handled in the useAuth hook
+      // Error handling is done in the login function
+      console.error("Login submission error:", error);
     } finally {
       setIsLoading(false);
     }
-  }
+  };
   
-  // Helper text to show login hint
-  const getHelpText = () => {
-    return (
-      <div className="text-sm text-muted-foreground mt-4">
-        <p className="mb-1">Demo Accounts (password: password):</p>
-        <ul className="list-disc pl-5 space-y-1">
-          <li><span className="text-primary cursor-pointer" onClick={() => form.setValue("email", "member@example.com")}>member@example.com</span> - Member access</li>
-          <li><span className="text-primary cursor-pointer" onClick={() => form.setValue("email", "trainer@example.com")}>trainer@example.com</span> - Trainer access</li>
-          <li><span className="text-primary cursor-pointer" onClick={() => form.setValue("email", "admin@example.com")}>admin@example.com</span> - Admin access</li>
-        </ul>
-      </div>
-    );
+  // Quick login buttons for demo
+  const handleQuickLogin = (role: string) => {
+    let email = "";
+    
+    switch (role) {
+      case "member":
+        email = "member@example.com";
+        break;
+      case "trainer":
+        email = "trainer@example.com";
+        break;
+      case "admin":
+        email = "admin@example.com";
+        break;
+      default:
+        return;
+    }
+    
+    form.setValue("email", email);
+    form.setValue("password", "password");
+    
+    form.handleSubmit(onSubmit)();
   };
   
   return (
-    <div className="w-full max-w-md mx-auto">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="p-8 bg-card text-card-foreground shadow-sm rounded-xl border relative overflow-hidden"
-      >
-        {/* Background decoration */}
-        <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-primary/5 rounded-full blur-3xl" />
-        
-        <div className="relative">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="space-y-2 text-center mb-6">
-                <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
-                <p className="text-sm text-muted-foreground">
-                  Enter your credentials to sign in to your account
-                </p>
-              </div>
-              
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="your.email@example.com"
-                        type="email"
-                        autoComplete="email"
-                        disabled={isLoading}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="••••••••"
-                        type="password"
-                        autoComplete="current-password"
-                        disabled={isLoading}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in...
-                  </>
-                ) : (
-                  "Sign in"
-                )}
-              </Button>
-              
-              {getHelpText()}
-            </form>
-          </Form>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="w-full max-w-md p-8 space-y-8 bg-card rounded-xl shadow-lg"
+    >
+      <div className="space-y-2 text-center">
+        <h1 className="text-3xl font-bold">Welcome back</h1>
+        <p className="text-muted-foreground">
+          Sign in to access your account
+        </p>
+      </div>
+      
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input placeholder="your@email.com" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex items-center justify-between">
+                  <FormLabel>Password</FormLabel>
+                  <a
+                    href="#"
+                    className="text-sm font-medium text-primary hover:underline"
+                  >
+                    Forgot password?
+                  </a>
+                </div>
+                <FormControl>
+                  <Input type="password" placeholder="••••••••" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="rememberMe"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel className="text-sm">Remember me</FormLabel>
+                </div>
+              </FormItem>
+            )}
+          />
+          
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isLoading}
+          >
+            {isLoading ? "Signing in..." : "Sign in"}
+            {!isLoading && <ArrowRight className="ml-2 h-4 w-4" />}
+          </Button>
+        </form>
+      </Form>
+      
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t" />
         </div>
-      </motion.div>
-    </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-card px-2 text-muted-foreground">
+            Or continue with
+          </span>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-3 gap-3">
+        <Button
+          variant="outline"
+          type="button"
+          className="text-xs"
+          onClick={() => handleQuickLogin("member")}
+        >
+          Member Demo
+        </Button>
+        <Button
+          variant="outline"
+          type="button"
+          className="text-xs"
+          onClick={() => handleQuickLogin("trainer")}
+        >
+          Trainer Demo
+        </Button>
+        <Button
+          variant="outline"
+          type="button"
+          className="text-xs"
+          onClick={() => handleQuickLogin("admin")}
+        >
+          Admin Demo
+        </Button>
+      </div>
+      
+      <div className="text-center mt-4">
+        <p className="text-sm text-muted-foreground">
+          Don't have an account?{" "}
+          <Link to="/register" className="font-medium text-primary hover:underline">
+            Create account
+          </Link>
+        </p>
+      </div>
+    </motion.div>
   );
-}
+};
 
 export default LoginForm;
