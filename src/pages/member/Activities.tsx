@@ -1,144 +1,182 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AnimatedLayout from "@/components/ui/AnimatedLayout";
-import { Activity, Calendar, Clock, Users } from "lucide-react";
+import { Activity, Calendar, Clock, Users, MapPin, Dumbbell, User } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { api } from "@/services/api";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
-// Mock activity data
-const activities = [
-  {
-    id: 1,
-    name: "Yoga Class",
-    description: "Relax and improve flexibility with our yoga sessions",
-    trainer: "Sarah Trainer",
-    time: "09:00 - 10:00",
-    day: "Monday",
-    participants: 12,
-    maxParticipants: 20,
-    location: "Studio 1",
-    level: "Beginner",
-    category: "Wellness"
-  },
-  {
-    id: 2,
-    name: "HIIT Workout",
-    description: "High-intensity interval training for maximum calorie burn",
-    trainer: "Mike Johnson",
-    time: "18:00 - 19:00",
-    day: "Tuesday",
-    participants: 18,
-    maxParticipants: 25,
-    location: "Main Gym",
-    level: "Intermediate",
-    category: "Cardio"
-  },
-  {
-    id: 3,
-    name: "Strength Training",
-    description: "Build muscle and strength with our comprehensive program",
-    trainer: "Alex Rodriguez",
-    time: "17:00 - 18:30",
-    day: "Wednesday",
-    participants: 15,
-    maxParticipants: 20,
-    location: "Weight Room",
-    level: "Advanced",
-    category: "Strength"
-  },
-  {
-    id: 4,
-    name: "Pilates",
-    description: "Core strengthening and flexibility exercises",
-    trainer: "Emma Wilson",
-    time: "10:00 - 11:00",
-    day: "Thursday",
-    participants: 10,
-    maxParticipants: 15,
-    location: "Studio 2",
-    level: "All Levels",
-    category: "Wellness"
-  },
-  {
-    id: 5,
-    name: "Cycling",
-    description: "Indoor cycling class with high energy music",
-    trainer: "John Smith",
-    time: "19:00 - 20:00",
-    day: "Friday",
-    participants: 20,
-    maxParticipants: 25,
-    location: "Spin Room",
-    level: "Intermediate",
-    category: "Cardio"
-  }
-];
+// Define activity interface
+interface ActivityType {
+  id: number;
+  name: string;
+  description: string;
+  trainer_id: number | null;
+  category: string;
+  difficulty_level: string;
+  duration_minutes: number;
+  max_participants: number;
+  location: string;
+  equipment_needed?: string[];
+  trainer?: {
+    name: string;
+  };
+  schedules?: {
+    id: number;
+    day_of_week: string;
+    start_time: string;
+    end_time: string;
+    is_recurring: boolean;
+    specific_date?: string;
+  }[];
+}
 
 export default function Activities() {
   const [filter, setFilter] = useState<string>("all");
+  const [activities, setActivities] = useState<ActivityType[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const { user } = useAuth();
+  const navigate = useNavigate();
   
-  const filteredActivities = activities.filter(activity => {
-    if (filter === "all") return true;
-    return activity.category.toLowerCase() === filter.toLowerCase();
-  });
+  // Fetch activities from API
+  useEffect(() => {
+    const fetchActivities = async () => {
+      if (!user?.token) return;
+      
+      try {
+        setIsLoading(true);
+        const params = filter !== "all" ? { category: filter } : undefined;
+        const data = await api.getActivities(user.token, params);
+        setActivities(data);
+      } catch (error) {
+        console.error("Error fetching activities:", error);
+        toast.error("Failed to load activities");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchActivities();
+  }, [user, filter]);
+
+  // Format time from API (HH:MM:SS) to readable format (HH:MM AM/PM)
+  const formatTime = (time: string) => {
+    if (!time) return "";
+    const [hours, minutes] = time.split(':');
+    const h = parseInt(hours);
+    return `${h % 12 || 12}:${minutes} ${h < 12 ? 'AM' : 'PM'}`;
+  };
+
+  // Get schedule display for an activity
+  const getScheduleDisplay = (activity: ActivityType) => {
+    if (!activity.schedules || activity.schedules.length === 0) {
+      return "Flexible schedule";
+    }
+    
+    // Just display the first schedule for simplicity
+    const schedule = activity.schedules[0];
+    return `${schedule.day_of_week}, ${formatTime(schedule.start_time)} - ${formatTime(schedule.end_time)}`;
+  };
+
+  const handleBookActivity = async (activityId: number) => {
+    if (!user?.token) {
+      toast.error("You must be logged in to book an activity");
+      return;
+    }
+    
+    try {
+      // Navigate to bookings page with pre-selected activity
+      navigate(`/member/bookings?book=${activityId}`);
+    } catch (error) {
+      console.error("Error navigating to booking:", error);
+      toast.error("Failed to process booking");
+    }
+  };
 
   return (
     <AnimatedLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold tracking-tight">Activities</h1>
-          <Button>Book New Activity</Button>
+          <Button onClick={() => navigate("/member/bookings")}>View My Bookings</Button>
         </div>
         
         <Tabs defaultValue="all" className="w-full" onValueChange={setFilter}>
           <TabsList className="w-full max-w-md mx-auto mb-6">
             <TabsTrigger value="all">All Classes</TabsTrigger>
-            <TabsTrigger value="cardio">Cardio</TabsTrigger>
-            <TabsTrigger value="strength">Strength</TabsTrigger>
-            <TabsTrigger value="wellness">Wellness</TabsTrigger>
+            <TabsTrigger value="Cardio">Cardio</TabsTrigger>
+            <TabsTrigger value="Strength">Strength</TabsTrigger>
+            <TabsTrigger value="Wellness">Wellness</TabsTrigger>
           </TabsList>
           
           <TabsContent value={filter} className="mt-0">
-            <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3">
-              {filteredActivities.map((activity) => (
-                <Card key={activity.id} className="overflow-hidden h-full flex flex-col transition-all hover:shadow-md">
-                  <CardHeader className="bg-primary/5 pb-4">
-                    <CardTitle className="flex items-center gap-2">
-                      <Activity size={18} className="text-primary" />
-                      {activity.name}
-                    </CardTitle>
-                    <CardDescription>{activity.level} • {activity.category}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-4 flex-1">
-                    <p className="text-sm text-muted-foreground mb-4">
-                      {activity.description}
-                    </p>
-                    <div className="grid grid-cols-1 gap-2">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Users size={16} className="text-muted-foreground" />
-                        <span>Trainer: {activity.trainer}</span>
+            {isLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-pulse">Loading activities...</div>
+              </div>
+            ) : activities.length > 0 ? (
+              <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3">
+                {activities.map((activity) => (
+                  <Card key={activity.id} className="overflow-hidden h-full flex flex-col transition-all hover:shadow-md">
+                    <CardHeader className="bg-primary/5 pb-4">
+                      <CardTitle className="flex items-center gap-2">
+                        <Activity size={18} className="text-primary" />
+                        {activity.name}
+                      </CardTitle>
+                      <CardDescription>{activity.difficulty_level} • {activity.category}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-4 flex-1">
+                      <p className="text-sm text-muted-foreground mb-4">
+                        {activity.description}
+                      </p>
+                      <div className="grid grid-cols-1 gap-2">
+                        <div className="flex items-center gap-2 text-sm">
+                          <User size={16} className="text-muted-foreground" />
+                          <span>Trainer: {activity.trainer?.name || "Any Trainer"}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <Calendar size={16} className="text-muted-foreground" />
+                          <span>{getScheduleDisplay(activity)}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <Clock size={16} className="text-muted-foreground" />
+                          <span>{activity.duration_minutes} minutes</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <MapPin size={16} className="text-muted-foreground" />
+                          <span>{activity.location}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <Users size={16} className="text-muted-foreground" />
+                          <span>Max participants: {activity.max_participants}</span>
+                        </div>
+                        {activity.equipment_needed && activity.equipment_needed.length > 0 && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <Dumbbell size={16} className="text-muted-foreground" />
+                            <span>Equipment: {activity.equipment_needed.join(', ')}</span>
+                          </div>
+                        )}
                       </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Calendar size={16} className="text-muted-foreground" />
-                        <span>{activity.day}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Clock size={16} className="text-muted-foreground" />
-                        <span>{activity.time}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Users size={16} className="text-muted-foreground" />
-                        <span>{activity.participants}/{activity.maxParticipants} participants</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="pt-0 border-t mt-auto">
-                    <Button className="w-full">Book Now</Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
+                    </CardContent>
+                    <CardFooter className="pt-0 border-t mt-auto">
+                      <Button className="w-full" onClick={() => handleBookActivity(activity.id)}>Book Now</Button>
+                    </CardFooter>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <Activity className="mx-auto h-12 w-12 text-muted-foreground" />
+                <h3 className="mt-4 text-lg font-semibold">No activities found</h3>
+                <p className="mt-2 text-muted-foreground">
+                  There are no {filter !== "all" ? filter.toLowerCase() : ""} activities available at the moment.
+                </p>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>

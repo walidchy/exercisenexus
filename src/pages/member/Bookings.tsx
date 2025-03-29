@@ -5,21 +5,35 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import AnimatedLayout from "@/components/ui/AnimatedLayout";
-import { Calendar, Clock, FileX, Info, MapPin, User } from "lucide-react";
+import { Calendar, Clock, FileX, MapPin, User } from "lucide-react";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/services/api";
+import { format } from "date-fns";
+import { Calendar as CalendarPicker } from "@/components/ui/calendar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-// Define booking interface
+// Define interfaces
+interface ActivityType {
+  id: number;
+  name: string;
+  trainer_id: number | null;
+  location: string;
+  trainer?: {
+    name: string;
+  };
+  schedules?: {
+    id: number;
+    day_of_week: string;
+    start_time: string;
+    end_time: string;
+  }[];
+}
+
 interface Booking {
   id: number;
-  activity: {
-    id: number;
-    name: string;
-    trainer_id: number;
-    location: string;
-  };
+  activity: ActivityType;
   date: string;
   status: "upcoming" | "completed" | "canceled";
   cancellation_reason?: string;
@@ -27,9 +41,12 @@ interface Booking {
     start_time: string;
     end_time: string;
   };
-  trainer?: {
-    name: string;
-  };
+}
+
+interface BookingFormState {
+  activityId: number | null;
+  date: Date | undefined;
+  scheduleId: number | null;
 }
 
 export default function Bookings() {
@@ -39,8 +56,35 @@ export default function Bookings() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [showBookDialog, setShowBookDialog] = useState<boolean>(false);
+  const [activities, setActivities] = useState<ActivityType[]>([]);
+  const [loadingActivities, setLoadingActivities] = useState<boolean>(false);
+  const [bookingFormState, setBookingFormState] = useState<BookingFormState>({
+    activityId: null,
+    date: undefined,
+    scheduleId: null,
+  });
+  
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
+  
+  // Check if we were redirected from the activities page with a pre-selected activity
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    const bookActivityId = queryParams.get('book');
+    
+    if (bookActivityId) {
+      // Pre-select the activity and open the booking dialog
+      setBookingFormState(prev => ({
+        ...prev,
+        activityId: parseInt(bookActivityId),
+      }));
+      setShowBookDialog(true);
+      
+      // Remove the query parameter from the URL
+      navigate('/member/bookings', { replace: true });
+    }
+  }, [location, navigate]);
   
   // Fetch bookings from API
   useEffect(() => {
@@ -61,6 +105,40 @@ export default function Bookings() {
     
     fetchBookings();
   }, [user]);
+  
+  // Fetch activities (for booking form)
+  useEffect(() => {
+    const fetchActivities = async () => {
+      if (!user?.token || !showBookDialog) return;
+      
+      try {
+        setLoadingActivities(true);
+        const data = await api.getActivities(user.token);
+        setActivities(data);
+        
+        // If an activity was pre-selected, load its details
+        if (bookingFormState.activityId) {
+          const selectedActivity = data.find(a => a.id === bookingFormState.activityId);
+          if (selectedActivity) {
+            // Pre-select the first schedule if available
+            if (selectedActivity.schedules && selectedActivity.schedules.length > 0) {
+              setBookingFormState(prev => ({
+                ...prev,
+                scheduleId: selectedActivity.schedules?.[0].id || null,
+              }));
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching activities:", error);
+        toast.error("Failed to load activities");
+      } finally {
+        setLoadingActivities(false);
+      }
+    };
+    
+    fetchActivities();
+  }, [user, showBookDialog, bookingFormState.activityId]);
   
   const filteredBookings = bookings.filter(booking => {
     if (activeTab === "all") return true;
@@ -91,17 +169,26 @@ export default function Bookings() {
   };
 
   const handleBookNewActivity = () => {
+    setBookingFormState({
+      activityId: null,
+      date: undefined,
+      scheduleId: null,
+    });
     setShowBookDialog(true);
   };
 
-  const handleBookActivity = async (activityId: number) => {
+  const handleCreateBooking = async () => {
     if (!user?.token) return;
+    if (!bookingFormState.activityId || !bookingFormState.date) {
+      toast.error("Please select an activity and date");
+      return;
+    }
     
     try {
-      // Mock booking data - in a real app, you'd collect more details
       const bookingData = {
-        activity_id: activityId,
-        date: new Date().toISOString().split('T')[0]
+        activity_id: bookingFormState.activityId,
+        date: format(bookingFormState.date, 'yyyy-MM-dd'),
+        activity_schedule_id: bookingFormState.scheduleId,
       };
       
       const newBooking = await api.createBooking(user.token, bookingData);
@@ -110,11 +197,18 @@ export default function Bookings() {
       setShowBookDialog(false);
       toast.success("Activity booked successfully!");
       
+      // Reset form state
+      setBookingFormState({
+        activityId: null,
+        date: undefined,
+        scheduleId: null,
+      });
+      
       // Switch to upcoming tab to show the new booking
       setActiveTab("upcoming");
     } catch (error) {
       console.error("Error booking activity:", error);
-      toast.error("Failed to book activity");
+      toast.error("Failed to book activity: " + (error as Error).message);
     }
   };
 
@@ -134,6 +228,14 @@ export default function Bookings() {
   const getTimeRange = (booking: Booking) => {
     if (!booking.schedule) return "Flexible time";
     return `${formatTime(booking.schedule.start_time)} - ${formatTime(booking.schedule.end_time)}`;
+  };
+
+  // Get available schedules for selected activity
+  const getAvailableSchedules = () => {
+    if (!bookingFormState.activityId) return [];
+    
+    const selectedActivity = activities.find(a => a.id === bookingFormState.activityId);
+    return selectedActivity?.schedules || [];
   };
 
   return (
@@ -169,7 +271,7 @@ export default function Bookings() {
                         <CardTitle className="text-lg">{booking.activity.name}</CardTitle>
                         <CardDescription className="flex items-center gap-1">
                           <User size={14} />
-                          {booking.trainer?.name || "Any Trainer"}
+                          {booking.activity.trainer?.name || "Any Trainer"}
                         </CardDescription>
                       </div>
                       <div className="ml-auto">
@@ -252,41 +354,91 @@ export default function Bookings() {
           <DialogHeader>
             <DialogTitle>Book New Activity</DialogTitle>
             <DialogDescription>
-              Select from available activities to book a session.
+              Select an activity, date, and time slot to book your session.
             </DialogDescription>
           </DialogHeader>
           
           <div className="grid gap-4 py-4">
-            <div className="space-y-4">
-              <p className="text-sm font-medium">Popular Activities:</p>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {/* In a real app, these would be fetched from the API */}
-                {[
-                  { id: 1, name: "Yoga Class" },
-                  { id: 2, name: "HIIT Training" },
-                  { id: 3, name: "Pilates" },
-                  { id: 4, name: "Swimming" },
-                  { id: 5, name: "Weight Training" },
-                  { id: 6, name: "Boxing" }
-                ].map((activity) => (
-                  <Card 
-                    key={activity.id} 
-                    className="cursor-pointer hover:border-primary" 
-                    onClick={() => handleBookActivity(activity.id)}
-                  >
-                    <CardHeader className="py-3 px-4">
-                      <CardTitle className="text-base">{activity.name}</CardTitle>
-                    </CardHeader>
-                  </Card>
-                ))}
+            {loadingActivities ? (
+              <div className="flex justify-center py-4">
+                <div className="animate-pulse">Loading activities...</div>
               </div>
-            </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Select Activity</label>
+                  <Select 
+                    value={bookingFormState.activityId?.toString() || ""} 
+                    onValueChange={(value) => setBookingFormState(prev => ({
+                      ...prev,
+                      activityId: parseInt(value),
+                      scheduleId: null, // Reset schedule when activity changes
+                    }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select an activity" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {activities.map((activity) => (
+                        <SelectItem key={activity.id} value={activity.id.toString()}>
+                          {activity.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Select Date</label>
+                  <div className="flex justify-center border rounded-md p-2">
+                    <CalendarPicker
+                      mode="single"
+                      selected={bookingFormState.date}
+                      onSelect={(date) => setBookingFormState(prev => ({
+                        ...prev,
+                        date,
+                      }))}
+                      disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                      className="rounded-md"
+                    />
+                  </div>
+                </div>
+                
+                {bookingFormState.activityId && getAvailableSchedules().length > 0 && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Select Time Slot</label>
+                    <Select 
+                      value={bookingFormState.scheduleId?.toString() || ""} 
+                      onValueChange={(value) => setBookingFormState(prev => ({
+                        ...prev,
+                        scheduleId: parseInt(value),
+                      }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a time slot" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getAvailableSchedules().map((schedule) => (
+                          <SelectItem key={schedule.id} value={schedule.id.toString()}>
+                            {schedule.day_of_week}, {formatTime(schedule.start_time)} - {formatTime(schedule.end_time)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           
           <DialogFooter className="flex space-x-2 justify-between items-center">
             <Button variant="outline" onClick={() => setShowBookDialog(false)}>Cancel</Button>
-            <Button onClick={handleViewAllActivities}>View All Activities</Button>
+            <Button 
+              onClick={handleCreateBooking}
+              disabled={!bookingFormState.activityId || !bookingFormState.date}
+            >
+              Book Activity
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

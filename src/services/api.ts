@@ -96,6 +96,102 @@ export const api = {
       throw error;
     }
   },
+
+  getActivity: async (token: string, activityId: number) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/activities/${activityId}`, {
+        method: 'GET',
+        headers: getHeaders(token),
+      });
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Get activity error:', error);
+      throw error;
+    }
+  },
+
+  createActivity: async (token: string, activityData: any) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/activities`, {
+        method: 'POST',
+        headers: getHeaders(token),
+        body: JSON.stringify(activityData),
+      });
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Create activity error:', error);
+      throw error;
+    }
+  },
+
+  updateActivity: async (token: string, activityId: number, activityData: any) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/activities/${activityId}`, {
+        method: 'PUT',
+        headers: getHeaders(token),
+        body: JSON.stringify(activityData),
+      });
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Update activity error:', error);
+      throw error;
+    }
+  },
+
+  deleteActivity: async (token: string, activityId: number) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/activities/${activityId}`, {
+        method: 'DELETE',
+        headers: getHeaders(token),
+      });
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Delete activity error:', error);
+      throw error;
+    }
+  },
+
+  // Activity Schedules
+  addActivitySchedule: async (token: string, activityId: number, scheduleData: any) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/activities/${activityId}/schedules`, {
+        method: 'POST',
+        headers: getHeaders(token),
+        body: JSON.stringify(scheduleData),
+      });
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Add activity schedule error:', error);
+      throw error;
+    }
+  },
+
+  updateActivitySchedule: async (token: string, activityId: number, scheduleId: number, scheduleData: any) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/activities/${activityId}/schedules/${scheduleId}`, {
+        method: 'PUT',
+        headers: getHeaders(token),
+        body: JSON.stringify(scheduleData),
+      });
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Update activity schedule error:', error);
+      throw error;
+    }
+  },
+
+  deleteActivitySchedule: async (token: string, activityId: number, scheduleId: number) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/activities/${activityId}/schedules/${scheduleId}`, {
+        method: 'DELETE',
+        headers: getHeaders(token),
+      });
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Delete activity schedule error:', error);
+      throw error;
+    }
+  },
   
   // Bookings
   getBookings: async (token: string, status = 'all') => {
@@ -135,6 +231,19 @@ export const api = {
       return handleResponse(response);
     } catch (error) {
       console.error('Cancel booking error:', error);
+      throw error;
+    }
+  },
+
+  completeBooking: async (token: string, bookingId: number) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}/complete`, {
+        method: 'PATCH',
+        headers: getHeaders(token),
+      });
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Complete booking error:', error);
       throw error;
     }
   },
@@ -183,6 +292,35 @@ export const api = {
     }
   },
 
+  // User management (for admin)
+  getUsers: async (token: string, role?: string, verified?: boolean) => {
+    try {
+      let url = `${API_BASE_URL}/users`;
+      const params = new URLSearchParams();
+      
+      if (role) {
+        params.append('role', role);
+      }
+      
+      if (verified !== undefined) {
+        params.append('verified', verified.toString());
+      }
+      
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: getHeaders(token),
+      });
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Get users error:', error);
+      throw error;
+    }
+  },
+
   // User verification for admin
   verifyUser: async (token: string, userId: number) => {
     try {
@@ -197,19 +335,148 @@ export const api = {
     }
   },
 
-  // Get all users (for admin)
-  getUsers: async (token: string, role?: string) => {
+  // Profile management
+  updateUserProfile: async (token: string, profileData: any) => {
     try {
-      const url = role 
-        ? `${API_BASE_URL}/users?role=${role}` 
-        : `${API_BASE_URL}/users`;
+      const response = await fetch(`${API_BASE_URL}/profile`, {
+        method: 'PUT',
+        headers: getHeaders(token),
+        body: JSON.stringify(profileData),
+      });
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Update profile error:', error);
+      throw error;
+    }
+  },
+
+  // Trainer availability
+  getTrainerAvailability: async (token: string, trainerId: number) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/trainers/${trainerId}/availability`, {
+        method: 'GET',
+        headers: getHeaders(token),
+      });
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Get trainer availability error:', error);
+      throw error;
+    }
+  },
+
+  updateTrainerAvailability: async (token: string, availabilityData: any) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/trainer/availability`, {
+        method: 'POST',
+        headers: getHeaders(token),
+        body: JSON.stringify(availabilityData),
+      });
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Update trainer availability error:', error);
+      throw error;
+    }
+  },
+
+  // Attendance tracking
+  markAttendance: async (token: string, bookingId: number) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}/attendance`, {
+        method: 'POST',
+        headers: getHeaders(token),
+        body: JSON.stringify({ check_in_time: new Date().toISOString() }),
+      });
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Mark attendance error:', error);
+      throw error;
+    }
+  },
+
+  updateAttendance: async (token: string, bookingId: number, checkOutTime: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}/attendance`, {
+        method: 'PATCH',
+        headers: getHeaders(token),
+        body: JSON.stringify({ check_out_time: checkOutTime }),
+      });
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Update attendance error:', error);
+      throw error;
+    }
+  },
+
+  // Notifications
+  getNotifications: async (token: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/notifications`, {
+        method: 'GET',
+        headers: getHeaders(token),
+      });
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Get notifications error:', error);
+      throw error;
+    }
+  },
+
+  markNotificationAsRead: async (token: string, notificationId: number) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/notifications/${notificationId}/read`, {
+        method: 'PATCH',
+        headers: getHeaders(token),
+      });
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Mark notification as read error:', error);
+      throw error;
+    }
+  },
+
+  // Equipment management
+  getEquipment: async (token: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/equipment`, {
+        method: 'GET',
+        headers: getHeaders(token),
+      });
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Get equipment error:', error);
+      throw error;
+    }
+  },
+
+  // Settings
+  getSettings: async (token: string, group?: string) => {
+    try {
+      let url = `${API_BASE_URL}/settings`;
+      if (group) {
+        url += `?group=${group}`;
+      }
+      
       const response = await fetch(url, {
         method: 'GET',
         headers: getHeaders(token),
       });
       return handleResponse(response);
     } catch (error) {
-      console.error('Get users error:', error);
+      console.error('Get settings error:', error);
+      throw error;
+    }
+  },
+
+  updateSetting: async (token: string, key: string, value: any) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/settings/${key}`, {
+        method: 'PUT',
+        headers: getHeaders(token),
+        body: JSON.stringify({ value }),
+      });
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Update setting error:', error);
       throw error;
     }
   },
