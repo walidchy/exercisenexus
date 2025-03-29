@@ -1,8 +1,8 @@
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { api } from "../services/api";
+import { API_BASE_URL, getHeaders } from "../config/api";
 
 // Define user types based on roles
 type UserRole = "member" | "trainer" | "admin";
