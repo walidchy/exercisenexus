@@ -128,12 +128,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         throw new Error("No auth token available");
       }
       
-      // In a real app, this would call the API endpoint to verify users
-      await fetch(`${API_BASE_URL}/users/${userId}/verify`, {
-        method: 'PATCH',
-        headers: getHeaders(user.token),
-      });
-      
+      await api.verifyUser(user.token, userId);
       toast.success("User verified successfully");
       return Promise.resolve();
     } catch (error) {

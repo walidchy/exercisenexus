@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -86,8 +85,10 @@ export default function UserVerification() {
       setUsers(users.map(user => 
         user.id === userId ? { ...user, status: "verified" } : user
       ));
+      toast.success("User verified successfully");
     } catch (error) {
       console.error("Failed to verify user:", error);
+      toast.error("Failed to verify user. Please try again.");
     }
   };
 
