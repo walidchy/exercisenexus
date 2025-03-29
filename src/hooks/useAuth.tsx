@@ -2,6 +2,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { api } from "../services/api";
 
 // Define user types based on roles
 type UserRole = "member" | "trainer" | "admin";
@@ -13,6 +14,7 @@ interface User {
   role: UserRole;
   avatar?: string;
   isVerified: boolean;
+  token?: string;
 }
 
 interface AuthContextType {
@@ -32,53 +34,6 @@ const AuthContext = createContext<AuthContextType>({
   verifyUser: async () => {},
 });
 
-// This would connect to your Laravel API in a real implementation
-const mockApiLogin = async (email: string, password: string): Promise<User> => {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 800));
-  
-  // Mock authentication logic
-  if (password !== "password") {
-    throw new Error("Invalid credentials");
-  }
-  
-  // Return mock user based on email
-  if (email.includes("member")) {
-    return {
-      id: 1,
-      name: "John Member",
-      email: "member@example.com",
-      role: "member",
-      isVerified: true,
-    };
-  } else if (email.includes("trainer")) {
-    return {
-      id: 2,
-      name: "Sarah Trainer",
-      email: "trainer@example.com",
-      role: "trainer",
-      isVerified: true,
-    };
-  } else if (email.includes("admin")) {
-    return {
-      id: 3,
-      name: "Admin User",
-      email: "admin@example.com",
-      role: "admin",
-      isVerified: true,
-    };
-  }
-  
-  // Default to member for this demo, but set as unverified
-  return {
-    id: 4,
-    name: "Default User",
-    email: email,
-    role: "member",
-    isVerified: false,
-  };
-};
-
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -92,7 +47,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const savedUser = localStorage.getItem("gym_user");
         
         if (savedUser) {
-          setUser(JSON.parse(savedUser));
+          const parsedUser = JSON.parse(savedUser);
+          
+          // Validate token by fetching current user
+          try {
+            const userData = await api.getCurrentUser(parsedUser.token);
+            setUser({
+              ...userData,
+              isVerified: userData.is_verified,
+              token: parsedUser.token
+            });
+          } catch (error) {
+            console.error("Token validation error:", error);
+            localStorage.removeItem("gym_user");
+          }
         }
       } catch (error) {
         console.error("Auth initialization error:", error);
@@ -110,26 +78,36 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setIsLoading(true);
     
     try {
-      // In a real app, this would call your Laravel API
-      const user = await mockApiLogin(email, password);
+      // Call the Laravel API via our service
+      const response = await api.login(email, password);
       
       // Check if user is verified
-      if (!user.isVerified) {
+      if (!response.user.is_verified) {
         toast.error("Your account is pending verification. Please contact admin.");
         setIsLoading(false);
         return;
       }
       
+      const userData: User = {
+        id: response.user.id,
+        name: response.user.name,
+        email: response.user.email,
+        role: response.user.role,
+        avatar: response.user.avatar,
+        isVerified: response.user.is_verified,
+        token: response.token
+      };
+      
       // Save user to state and localStorage
-      setUser(user);
-      localStorage.setItem("gym_user", JSON.stringify(user));
+      setUser(userData);
+      localStorage.setItem("gym_user", JSON.stringify(userData));
       
       // Redirect based on user role
-      if (user.role === "member") {
+      if (userData.role === "member") {
         navigate("/member");
-      } else if (user.role === "trainer") {
+      } else if (userData.role === "trainer") {
         navigate("/trainer");
-      } else if (user.role === "admin") {
+      } else if (userData.role === "admin") {
         navigate("/admin");
       }
       
@@ -146,8 +124,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // User verification function (for admin)
   const verifyUser = async (userId: number) => {
     try {
-      // In a real app, this would call your API to verify the user
-      // Mock verification for demo
+      if (!user?.token) {
+        throw new Error("No auth token available");
+      }
+      
+      // In a real app, this would call the API endpoint to verify users
+      await fetch(`${API_BASE_URL}/users/${userId}/verify`, {
+        method: 'PATCH',
+        headers: getHeaders(user.token),
+      });
+      
       toast.success("User verified successfully");
       return Promise.resolve();
     } catch (error) {
@@ -159,6 +145,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Logout function
   const logout = () => {
+    if (user?.token) {
+      // Call API to invalidate token
+      api.logout(user.token).catch(err => {
+        console.error("Logout API error:", err);
+      });
+    }
+    
     setUser(null);
     localStorage.removeItem("gym_user");
     navigate("/login");

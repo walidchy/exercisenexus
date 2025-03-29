@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,112 +8,132 @@ import AnimatedLayout from "@/components/ui/AnimatedLayout";
 import { Calendar, Clock, FileX, Info, MapPin, User } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { api } from "@/services/api";
 
-// Mock booking data
-const bookings = [
-  {
-    id: 1,
-    activity: "Yoga Class",
-    trainer: "Sarah Trainer",
-    date: "2023-11-15",
-    time: "09:00 - 10:00",
-    location: "Studio 1",
-    status: "upcoming"
-  },
-  {
-    id: 2,
-    activity: "HIIT Workout",
-    trainer: "Mike Johnson",
-    date: "2023-11-18",
-    time: "18:00 - 19:00",
-    location: "Main Gym",
-    status: "upcoming"
-  },
-  {
-    id: 3,
-    activity: "Strength Training",
-    trainer: "Alex Rodriguez",
-    date: "2023-11-02",
-    time: "17:00 - 18:30",
-    location: "Weight Room",
-    status: "completed"
-  },
-  {
-    id: 4,
-    activity: "Pilates",
-    trainer: "Emma Wilson",
-    date: "2023-10-28",
-    time: "10:00 - 11:00",
-    location: "Studio 2",
-    status: "completed"
-  },
-  {
-    id: 5,
-    activity: "Cycling",
-    trainer: "John Smith",
-    date: "2023-10-12",
-    time: "19:00 - 20:00",
-    location: "Spin Room",
-    status: "canceled"
-  }
-];
+// Define booking interface
+interface Booking {
+  id: number;
+  activity: {
+    id: number;
+    name: string;
+    trainer_id: number;
+    location: string;
+  };
+  date: string;
+  status: "upcoming" | "completed" | "canceled";
+  cancellation_reason?: string;
+  schedule?: {
+    start_time: string;
+    end_time: string;
+  };
+  trainer?: {
+    name: string;
+  };
+}
 
 export default function Bookings() {
   const [activeTab, setActiveTab] = useState<string>("upcoming");
   const [bookingToCancel, setBookingToCancel] = useState<number | null>(null);
   const [openDialog, setOpenDialog] = useState<boolean>(false);
-  const [localBookings, setLocalBookings] = useState(bookings);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [showBookDialog, setShowBookDialog] = useState<boolean>(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
   
-  const filteredBookings = localBookings.filter(booking => {
+  // Fetch bookings from API
+  useEffect(() => {
+    const fetchBookings = async () => {
+      if (!user?.token) return;
+      
+      try {
+        setIsLoading(true);
+        const data = await api.getBookings(user.token);
+        setBookings(data);
+      } catch (error) {
+        console.error("Error fetching bookings:", error);
+        toast.error("Failed to load bookings");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchBookings();
+  }, [user]);
+  
+  const filteredBookings = bookings.filter(booking => {
     if (activeTab === "all") return true;
     return booking.status === activeTab;
   });
 
-  const handleCancelBooking = () => {
-    if (bookingToCancel === null) return;
+  const handleCancelBooking = async () => {
+    if (bookingToCancel === null || !user?.token) return;
     
-    setLocalBookings(prev => 
-      prev.map(booking => 
-        booking.id === bookingToCancel 
-          ? { ...booking, status: "canceled" } 
-          : booking
-      )
-    );
-    
-    setOpenDialog(false);
-    toast.success("Booking canceled successfully");
+    try {
+      await api.cancelBooking(user.token, bookingToCancel);
+      
+      // Update bookings list
+      setBookings(prev => 
+        prev.map(booking => 
+          booking.id === bookingToCancel 
+            ? { ...booking, status: "canceled" } 
+            : booking
+        )
+      );
+      
+      setOpenDialog(false);
+      toast.success("Booking canceled successfully");
+    } catch (error) {
+      console.error("Error canceling booking:", error);
+      toast.error("Failed to cancel booking");
+    }
   };
 
   const handleBookNewActivity = () => {
     setShowBookDialog(true);
   };
 
-  const handleBookActivity = () => {
-    // Mock booking logic - in a real app, this would send data to an API
-    toast.success("Activity booked successfully!");
-    setShowBookDialog(false);
+  const handleBookActivity = async (activityId: number) => {
+    if (!user?.token) return;
     
-    // Mock a new booking being added
-    const newBooking = {
-      id: localBookings.length + 1,
-      activity: "New Activity",
-      trainer: "Available Trainer",
-      date: new Date().toISOString().split('T')[0],
-      time: "10:00 - 11:00",
-      location: "Main Gym",
-      status: "upcoming"
-    };
-    
-    setLocalBookings(prev => [...prev, newBooking]);
-    
-    // Switch to upcoming tab to show the new booking
-    setActiveTab("upcoming");
+    try {
+      // Mock booking data - in a real app, you'd collect more details
+      const bookingData = {
+        activity_id: activityId,
+        date: new Date().toISOString().split('T')[0]
+      };
+      
+      const newBooking = await api.createBooking(user.token, bookingData);
+      
+      setBookings(prev => [...prev, newBooking]);
+      setShowBookDialog(false);
+      toast.success("Activity booked successfully!");
+      
+      // Switch to upcoming tab to show the new booking
+      setActiveTab("upcoming");
+    } catch (error) {
+      console.error("Error booking activity:", error);
+      toast.error("Failed to book activity");
+    }
   };
 
   const handleViewAllActivities = () => {
     navigate("/member/activities");
+  };
+
+  // Format time from API (HH:MM:SS) to readable format (HH:MM AM/PM)
+  const formatTime = (time: string) => {
+    if (!time) return "";
+    const [hours, minutes] = time.split(':');
+    const h = parseInt(hours);
+    return `${h % 12 || 12}:${minutes} ${h < 12 ? 'AM' : 'PM'}`;
+  };
+  
+  // Get time range for booking
+  const getTimeRange = (booking: Booking) => {
+    if (!booking.schedule) return "Flexible time";
+    return `${formatTime(booking.schedule.start_time)} - ${formatTime(booking.schedule.end_time)}`;
   };
 
   return (
@@ -133,7 +153,11 @@ export default function Bookings() {
           </TabsList>
           
           <TabsContent value={activeTab} className="mt-0">
-            {filteredBookings.length > 0 ? (
+            {isLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-pulse">Loading bookings...</div>
+              </div>
+            ) : filteredBookings.length > 0 ? (
               <div className="space-y-4">
                 {filteredBookings.map((booking) => (
                   <Card key={booking.id} className="overflow-hidden">
@@ -142,10 +166,10 @@ export default function Bookings() {
                       booking.status === 'completed' ? 'bg-success/10' : 'bg-primary/5'
                     }`}>
                       <div className="flex flex-col">
-                        <CardTitle className="text-lg">{booking.activity}</CardTitle>
+                        <CardTitle className="text-lg">{booking.activity.name}</CardTitle>
                         <CardDescription className="flex items-center gap-1">
                           <User size={14} />
-                          {booking.trainer}
+                          {booking.trainer?.name || "Any Trainer"}
                         </CardDescription>
                       </div>
                       <div className="ml-auto">
@@ -163,7 +187,7 @@ export default function Bookings() {
                               <DialogHeader>
                                 <DialogTitle>Cancel Booking</DialogTitle>
                                 <DialogDescription>
-                                  Are you sure you want to cancel your booking for {booking.activity}? This action cannot be undone.
+                                  Are you sure you want to cancel your booking for {booking.activity.name}? This action cannot be undone.
                                 </DialogDescription>
                               </DialogHeader>
                               <DialogFooter>
@@ -196,11 +220,11 @@ export default function Bookings() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Clock size={16} className="text-muted-foreground" />
-                        <span>{booking.time}</span>
+                        <span>{getTimeRange(booking)}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <MapPin size={16} className="text-muted-foreground" />
-                        <span>{booking.location}</span>
+                        <span>{booking.activity.location}</span>
                       </div>
                     </CardContent>
                   </Card>
@@ -237,10 +261,22 @@ export default function Bookings() {
               <p className="text-sm font-medium">Popular Activities:</p>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {["Yoga Class", "HIIT Training", "Pilates", "Swimming", "Weight Training", "Boxing"].map((activity, index) => (
-                  <Card key={index} className="cursor-pointer hover:border-primary" onClick={handleBookActivity}>
+                {/* In a real app, these would be fetched from the API */}
+                {[
+                  { id: 1, name: "Yoga Class" },
+                  { id: 2, name: "HIIT Training" },
+                  { id: 3, name: "Pilates" },
+                  { id: 4, name: "Swimming" },
+                  { id: 5, name: "Weight Training" },
+                  { id: 6, name: "Boxing" }
+                ].map((activity) => (
+                  <Card 
+                    key={activity.id} 
+                    className="cursor-pointer hover:border-primary" 
+                    onClick={() => handleBookActivity(activity.id)}
+                  >
                     <CardHeader className="py-3 px-4">
-                      <CardTitle className="text-base">{activity}</CardTitle>
+                      <CardTitle className="text-base">{activity.name}</CardTitle>
                     </CardHeader>
                   </Card>
                 ))}
