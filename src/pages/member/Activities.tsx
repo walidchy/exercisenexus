@@ -6,10 +6,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AnimatedLayout from "@/components/ui/AnimatedLayout";
 import { Activity, Calendar, Clock, Users, MapPin, Dumbbell, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import axios from "axios";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { API_BASE_URL, getHeaders } from "@/config/api";
+import mockApi from "@/services/mockApi";
 
 // Define activity interface
 interface ActivityType {
@@ -43,24 +42,23 @@ export default function Activities() {
   const { user } = useAuth();
   const navigate = useNavigate();
   
-  // Fetch activities from API using axios
+  // Fetch activities from mockApi
   useEffect(() => {
     const fetchActivities = async () => {
-      if (!user?.token) return;
-      
       try {
         setIsLoading(true);
-        let url = `${API_BASE_URL}/activities`;
         
+        const response = await mockApi.get('/activities');
+        
+        // Filter by category if needed
+        let filteredActivities = response.data;
         if (filter !== "all") {
-          url += `?category=${filter}`;
+          filteredActivities = response.data.filter(
+            (activity: ActivityType) => activity.category === filter
+          );
         }
         
-        const response = await axios.get(url, {
-          headers: getHeaders(user.token)
-        });
-        
-        setActivities(response.data);
+        setActivities(filteredActivities);
       } catch (error) {
         console.error("Error fetching activities:", error);
         toast.error("Failed to load activities");
@@ -70,7 +68,7 @@ export default function Activities() {
     };
     
     fetchActivities();
-  }, [user, filter]);
+  }, [filter]);
 
   // Format time from API (HH:MM:SS) to readable format (HH:MM AM/PM)
   const formatTime = (time: string) => {

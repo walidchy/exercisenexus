@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,87 +20,43 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import mockApi from "@/services/mockApi";
 
-// Mock member data
-const members = [
-  {
-    id: 1,
-    name: "Alice Johnson",
-    email: "alice@example.com",
-    phone: "+1 (555) 123-4567",
-    joinDate: "2023-05-15",
-    membershipType: "Premium",
-    membershipStatus: "Active",
-    lastVisit: "2023-11-10"
-  },
-  {
-    id: 2,
-    name: "Bob Smith",
-    email: "bob@example.com",
-    phone: "+1 (555) 234-5678",
-    joinDate: "2023-06-22",
-    membershipType: "Basic",
-    membershipStatus: "Active",
-    lastVisit: "2023-11-12"
-  },
-  {
-    id: 3,
-    name: "Carol Williams",
-    email: "carol@example.com",
-    phone: "+1 (555) 345-6789",
-    joinDate: "2023-04-10",
-    membershipType: "Premium",
-    membershipStatus: "Expired",
-    lastVisit: "2023-10-05"
-  },
-  {
-    id: 4,
-    name: "David Brown",
-    email: "david@example.com",
-    phone: "+1 (555) 456-7890",
-    joinDate: "2023-08-03",
-    membershipType: "Premium",
-    membershipStatus: "Active",
-    lastVisit: "2023-11-11"
-  },
-  {
-    id: 5,
-    name: "Eva Davis",
-    email: "eva@example.com",
-    phone: "+1 (555) 567-8901",
-    joinDate: "2023-07-19",
-    membershipType: "Basic",
-    membershipStatus: "Suspended",
-    lastVisit: "2023-09-30"
-  },
-  {
-    id: 6,
-    name: "Frank Miller",
-    email: "frank@example.com",
-    phone: "+1 (555) 678-9012",
-    joinDate: "2023-09-05",
-    membershipType: "Basic",
-    membershipStatus: "Active",
-    lastVisit: "2023-11-09"
-  },
-  {
-    id: 7,
-    name: "Grace Wilson",
-    email: "grace@example.com",
-    phone: "+1 (555) 789-0123",
-    joinDate: "2023-10-20",
-    membershipType: "Premium",
-    membershipStatus: "Active",
-    lastVisit: "2023-11-13"
-  }
-];
+interface Member {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  joinDate: string;
+  membershipType: string;
+  membershipStatus: string;
+  lastVisit: string;
+}
 
 export default function Members() {
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [showAddDialog, setShowAddDialog] = useState<boolean>(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
   const [selectedMember, setSelectedMember] = useState<any>(null);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const navigate = useNavigate();
+  
+  useEffect(() => {
+    const fetchMembers = async () => {
+      try {
+        setIsLoading(true);
+        const response = await mockApi.get('/admin/members');
+        setMembers(response.data);
+      } catch (error) {
+        console.error("Error fetching members:", error);
+        toast.error("Failed to load member data");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchMembers();
+  }, []);
   
   const filteredMembers = members.filter(member => {
     if (!searchQuery) return true;
@@ -113,13 +70,6 @@ export default function Members() {
       member.membershipStatus.toLowerCase().includes(searchLower)
     );
   });
-  
-  const handleAddMember = (e: React.FormEvent) => {
-    e.preventDefault();
-    // In a real app, this would send data to the API
-    toast.success("Member added successfully!");
-    setShowAddDialog(false);
-  };
   
   const handleEditMember = (member: any) => {
     toast.info(`Editing ${member.name}'s details`);
@@ -164,6 +114,16 @@ export default function Members() {
         return "bg-gray-100 text-gray-800";
     }
   };
+
+  if (isLoading) {
+    return (
+      <AnimatedLayout>
+        <div className="flex justify-center py-12">
+          <p className="text-muted-foreground">Loading member data...</p>
+        </div>
+      </AnimatedLayout>
+    );
+  }
 
   return (
     <AnimatedLayout>

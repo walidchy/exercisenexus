@@ -1,10 +1,12 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import AnimatedLayout from "@/components/ui/AnimatedLayout";
 import { Clock, Users } from "lucide-react";
+import mockApi from "@/services/mockApi";
+import { toast } from "sonner";
 
 const weekDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const timeSlots = [
@@ -14,26 +16,54 @@ const timeSlots = [
   "18:00 - 19:00", "19:00 - 20:00", "20:00 - 21:00", "21:00 - 22:00"
 ];
 
-// Mock schedule data
-const scheduleData = [
-  { id: 1, day: "Monday", time: "09:00 - 10:00", activity: "Yoga Class", participants: 12, location: "Studio 1" },
-  { id: 2, day: "Monday", time: "18:00 - 19:00", activity: "HIIT Workout", participants: 18, location: "Main Gym" },
-  { id: 3, day: "Tuesday", time: "10:00 - 11:00", activity: "Pilates", participants: 10, location: "Studio 2" },
-  { id: 4, day: "Wednesday", time: "17:00 - 18:30", activity: "Strength Training", participants: 15, location: "Weight Room" },
-  { id: 5, day: "Thursday", time: "08:00 - 09:00", activity: "Morning Stretching", participants: 8, location: "Studio 1" },
-  { id: 6, day: "Friday", time: "19:00 - 20:00", activity: "Cycling", participants: 20, location: "Spin Room" },
-  { id: 7, day: "Saturday", time: "10:00 - 11:30", activity: "Full Body Workout", participants: 16, location: "Main Gym" }
-];
+interface ScheduleItem {
+  id: number;
+  day: string;
+  time: string;
+  activity: string;
+  participants: number;
+  location: string;
+}
+
+interface ScheduleData {
+  currentWeek: string;
+  previousWeek: string;
+  nextWeek: string;
+  nextTwoWeeks: string;
+  scheduleData: ScheduleItem[];
+}
 
 export default function Schedule() {
   const [selectedWeek, setSelectedWeek] = useState<string>("current");
+  const [scheduleData, setScheduleData] = useState<ScheduleData | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  
+  useEffect(() => {
+    const fetchSchedule = async () => {
+      try {
+        setIsLoading(true);
+        const response = await mockApi.get('/trainer/schedule');
+        setScheduleData(response.data);
+      } catch (error) {
+        console.error("Error fetching schedule:", error);
+        toast.error("Failed to load schedule data");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchSchedule();
+  }, []);
   
   const getScheduleForDay = (day: string) => {
-    return scheduleData.filter(item => item.day === day);
+    if (!scheduleData) return [];
+    return scheduleData.scheduleData.filter(item => item.day === day);
   };
 
   const renderTimeSlot = (day: string, time: string) => {
-    const schedule = scheduleData.find(item => item.day === day && item.time === time);
+    if (!scheduleData) return null;
+    
+    const schedule = scheduleData.scheduleData.find(item => item.day === day && item.time === time);
     
     if (!schedule) {
       return (
@@ -54,6 +84,16 @@ export default function Schedule() {
       </div>
     );
   };
+
+  if (isLoading) {
+    return (
+      <AnimatedLayout>
+        <div className="flex justify-center py-12">
+          <p className="text-muted-foreground">Loading schedule data...</p>
+        </div>
+      </AnimatedLayout>
+    );
+  }
 
   return (
     <AnimatedLayout>
@@ -81,9 +121,9 @@ export default function Schedule() {
             <CardTitle>Weekly Schedule</CardTitle>
             <CardDescription>
               Your training sessions for the week of{" "}
-              {selectedWeek === "previous" ? "November 6-12, 2023" : 
-               selectedWeek === "current" ? "November 13-19, 2023" : 
-               selectedWeek === "next" ? "November 20-26, 2023" : "November 27 - December 3, 2023"}
+              {selectedWeek === "previous" ? scheduleData?.previousWeek : 
+               selectedWeek === "current" ? scheduleData?.currentWeek : 
+               selectedWeek === "next" ? scheduleData?.nextWeek : scheduleData?.nextTwoWeeks}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -163,7 +203,7 @@ export default function Schedule() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {scheduleData.filter(session => session.day !== "Monday").slice(0, 3).map((session) => (
+                {scheduleData?.scheduleData.filter(session => session.day !== "Monday").slice(0, 3).map((session) => (
                   <div key={session.id} className="flex justify-between items-center p-3 border rounded-md">
                     <div>
                       <h4 className="font-medium">{session.activity}</h4>

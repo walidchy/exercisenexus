@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Check, HelpCircle } from "lucide-react";
@@ -10,8 +10,39 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import AnimatedLayout from "@/components/ui/AnimatedLayout";
+import mockApi from "@/services/mockApi";
+import { toast } from "sonner";
+
+interface MembershipPlan {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  features: string[];
+  popular: boolean;
+}
 
 export default function MembershipPlans() {
+  const [plans, setPlans] = useState<MembershipPlan[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMembershipPlans = async () => {
+      try {
+        setLoading(true);
+        const response = await mockApi.get('/membership-plans');
+        setPlans(response.data);
+      } catch (error) {
+        console.error("Error fetching membership plans:", error);
+        toast.error("Failed to load membership plans");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMembershipPlans();
+  }, []);
+
   return (
     <AnimatedLayout>
       <div className="space-y-6">
@@ -22,113 +53,46 @@ export default function MembershipPlans() {
           </p>
         </div>
         
-        <div className="grid gap-6 md:grid-cols-3">
-          {/* Basic Plan */}
-          <Card className="flex flex-col border-border">
-            <CardHeader className="pb-4">
-              <CardTitle>Basic</CardTitle>
-              <CardDescription>
-                Perfect for beginners and casual gym-goers
-              </CardDescription>
-              <div className="mt-4 flex items-baseline">
-                <span className="text-3xl font-bold">$29.99</span>
-                <span className="ml-1 text-muted-foreground">/month</span>
-              </div>
-            </CardHeader>
-            <CardContent className="flex flex-1 flex-col">
-              <ul className="space-y-3">
-                {[
-                  "Gym access (6am-10pm)",
-                  "Basic equipment usage",
-                  "Locker access",
-                  "2 group classes per month",
-                ].map((feature, index) => (
-                  <li key={index} className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-primary" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-            <CardFooter>
-              <Button className="w-full">Subscribe</Button>
-            </CardFooter>
-          </Card>
-
-          {/* Premium Plan */}
-          <Card className="flex flex-col relative border-primary bg-primary/5">
-            <div className="absolute -top-3 right-0 left-0 mx-auto w-fit px-3 py-1 text-xs font-medium bg-primary text-white rounded-full">
-              Most Popular
-            </div>
-            <CardHeader className="pb-4">
-              <CardTitle>Premium</CardTitle>
-              <CardDescription>
-                Our most popular plan for serious fitness enthusiasts
-              </CardDescription>
-              <div className="mt-4 flex items-baseline">
-                <span className="text-3xl font-bold">$59.99</span>
-                <span className="ml-1 text-muted-foreground">/month</span>
-              </div>
-            </CardHeader>
-            <CardContent className="flex flex-1 flex-col">
-              <ul className="space-y-3">
-                {[
-                  "24/7 gym access",
-                  "Full equipment usage",
-                  "Locker access",
-                  "Unlimited group classes",
-                  "Basic fitness assessment",
-                  "Access to sauna & pool",
-                ].map((feature, index) => (
-                  <li key={index} className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-primary" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-            <CardFooter>
-              <Button className="w-full">Subscribe</Button>
-            </CardFooter>
-          </Card>
-
-          {/* Elite Plan */}
-          <Card className="flex flex-col border-border">
-            <CardHeader className="pb-4">
-              <CardTitle>Elite</CardTitle>
-              <CardDescription>
-                The ultimate fitness experience with premium perks
-              </CardDescription>
-              <div className="mt-4 flex items-baseline">
-                <span className="text-3xl font-bold">$99.99</span>
-                <span className="ml-1 text-muted-foreground">/month</span>
-              </div>
-            </CardHeader>
-            <CardContent className="flex flex-1 flex-col">
-              <ul className="space-y-3">
-                {[
-                  "24/7 gym access",
-                  "Full equipment usage",
-                  "Premium locker access",
-                  "Unlimited group classes",
-                  "Comprehensive fitness assessment",
-                  "Personal training session (2x/month)",
-                  "1 free guest per visit",
-                  "Access to sauna, pool & spa",
-                  "Nutrition consultation",
-                ].map((feature, index) => (
-                  <li key={index} className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-primary" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-            <CardFooter>
-              <Button className="w-full">Subscribe</Button>
-            </CardFooter>
-          </Card>
-        </div>
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <p className="text-muted-foreground">Loading membership plans...</p>
+          </div>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-3">
+            {plans.map((plan) => (
+              <Card key={plan.id} className={`flex flex-col ${plan.popular ? 'border-primary bg-primary/5 relative' : 'border-border'}`}>
+                {plan.popular && (
+                  <div className="absolute -top-3 right-0 left-0 mx-auto w-fit px-3 py-1 text-xs font-medium bg-primary text-white rounded-full">
+                    Most Popular
+                  </div>
+                )}
+                <CardHeader className="pb-4">
+                  <CardTitle>{plan.name}</CardTitle>
+                  <CardDescription>
+                    {plan.description}
+                  </CardDescription>
+                  <div className="mt-4 flex items-baseline">
+                    <span className="text-3xl font-bold">${plan.price.toFixed(2)}</span>
+                    <span className="ml-1 text-muted-foreground">/month</span>
+                  </div>
+                </CardHeader>
+                <CardContent className="flex flex-1 flex-col">
+                  <ul className="space-y-3">
+                    {plan.features.map((feature, index) => (
+                      <li key={index} className="flex items-center gap-2">
+                        <Check className="h-4 w-4 text-primary" />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+                <CardFooter>
+                  <Button className="w-full">Subscribe</Button>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        )}
         
         {/* FAQ Section */}
         <div className="mt-12">

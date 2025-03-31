@@ -1,74 +1,48 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AnimatedLayout from "@/components/ui/AnimatedLayout";
 import { ArrowUpDown, Calendar, Phone, Search, User } from "lucide-react";
+import mockApi from "@/services/mockApi";
+import { toast } from "sonner";
 
-// Mock client data
-const clients = [
-  {
-    id: 1,
-    name: "Alice Johnson",
-    email: "alice@example.com",
-    phone: "+1 (555) 123-4567",
-    joinDate: "2023-05-15",
-    lastVisit: "2023-11-10",
-    subscription: "Premium",
-    status: "active",
-    progress: "good"
-  },
-  {
-    id: 2,
-    name: "Bob Smith",
-    email: "bob@example.com",
-    phone: "+1 (555) 234-5678",
-    joinDate: "2023-06-22",
-    lastVisit: "2023-11-12",
-    subscription: "Basic",
-    status: "active",
-    progress: "excellent"
-  },
-  {
-    id: 3,
-    name: "Carol Williams",
-    email: "carol@example.com",
-    phone: "+1 (555) 345-6789",
-    joinDate: "2023-04-10",
-    lastVisit: "2023-10-05",
-    subscription: "Premium",
-    status: "inactive",
-    progress: "needs attention"
-  },
-  {
-    id: 4,
-    name: "David Brown",
-    email: "david@example.com",
-    phone: "+1 (555) 456-7890",
-    joinDate: "2023-08-03",
-    lastVisit: "2023-11-11",
-    subscription: "Premium",
-    status: "active",
-    progress: "good"
-  },
-  {
-    id: 5,
-    name: "Eva Davis",
-    email: "eva@example.com",
-    phone: "+1 (555) 567-8901",
-    joinDate: "2023-07-19",
-    lastVisit: "2023-09-30",
-    subscription: "Basic",
-    status: "inactive",
-    progress: "needs attention"
-  }
-];
+interface Client {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  joinDate: string;
+  lastVisit: string;
+  subscription: string;
+  status: string;
+  progress: string;
+}
 
 export default function Clients() {
   const [filter, setFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [clients, setClients] = useState<Client[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  
+  useEffect(() => {
+    const fetchClients = async () => {
+      try {
+        setIsLoading(true);
+        const response = await mockApi.get('/trainer/clients');
+        setClients(response.data);
+      } catch (error) {
+        console.error("Error fetching clients:", error);
+        toast.error("Failed to load client data");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchClients();
+  }, []);
   
   const filteredClients = clients.filter(client => {
     // Filter by status
@@ -103,6 +77,16 @@ export default function Clients() {
         return "bg-gray-100 text-gray-800";
     }
   };
+
+  if (isLoading) {
+    return (
+      <AnimatedLayout>
+        <div className="flex justify-center py-12">
+          <p className="text-muted-foreground">Loading client data...</p>
+        </div>
+      </AnimatedLayout>
+    );
+  }
 
   return (
     <AnimatedLayout>

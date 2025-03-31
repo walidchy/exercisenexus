@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,77 +10,45 @@ import { Textarea } from "@/components/ui/textarea";
 import AnimatedLayout from "@/components/ui/AnimatedLayout";
 import { Activity, Calendar, Clock, Edit, Trash, Users, Plus } from "lucide-react";
 import { toast } from "sonner";
+import mockApi from "@/services/mockApi";
 
-// Mock activities data
-const activities = [
-  {
-    id: 1,
-    name: "Yoga Class",
-    description: "Relax and improve flexibility with our yoga sessions",
-    time: "09:00 - 10:00",
-    day: "Monday",
-    participants: 12,
-    maxParticipants: 20,
-    location: "Studio 1",
-    level: "Beginner",
-    category: "Wellness"
-  },
-  {
-    id: 2,
-    name: "HIIT Workout",
-    description: "High-intensity interval training for maximum calorie burn",
-    time: "18:00 - 19:00",
-    day: "Tuesday",
-    participants: 18,
-    maxParticipants: 25,
-    location: "Main Gym",
-    level: "Intermediate",
-    category: "Cardio"
-  },
-  {
-    id: 3,
-    name: "Strength Training",
-    description: "Build muscle and strength with our comprehensive program",
-    time: "17:00 - 18:30",
-    day: "Wednesday",
-    participants: 15,
-    maxParticipants: 20,
-    location: "Weight Room",
-    level: "Advanced",
-    category: "Strength"
-  },
-  {
-    id: 4,
-    name: "Pilates",
-    description: "Core strengthening and flexibility exercises",
-    time: "10:00 - 11:00",
-    day: "Thursday",
-    participants: 10,
-    maxParticipants: 15,
-    location: "Studio 2",
-    level: "All Levels",
-    category: "Wellness"
-  },
-  {
-    id: 5,
-    name: "Cycling",
-    description: "Indoor cycling class with high energy music",
-    time: "19:00 - 20:00",
-    day: "Friday",
-    participants: 20,
-    maxParticipants: 25,
-    location: "Spin Room",
-    level: "Intermediate",
-    category: "Cardio"
-  }
-];
+interface TrainerActivity {
+  id: number;
+  name: string;
+  description: string;
+  time: string;
+  day: string;
+  participants: number;
+  maxParticipants: number;
+  location: string;
+  level: string;
+  category: string;
+}
 
 export default function Activities() {
   const [filter, setFilter] = useState<string>("all");
   const [showAddDialog, setShowAddDialog] = useState<boolean>(false);
-  const [localActivities, setLocalActivities] = useState(activities);
+  const [activities, setActivities] = useState<TrainerActivity[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   
-  const filteredActivities = localActivities.filter(activity => {
+  useEffect(() => {
+    const fetchActivities = async () => {
+      try {
+        setIsLoading(true);
+        const response = await mockApi.get('/trainer/activities');
+        setActivities(response.data);
+      } catch (error) {
+        console.error("Error fetching trainer activities:", error);
+        toast.error("Failed to load activities");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchActivities();
+  }, []);
+  
+  const filteredActivities = activities.filter(activity => {
     if (filter === "all") return true;
     return activity.category.toLowerCase() === filter.toLowerCase();
   });
@@ -91,6 +59,16 @@ export default function Activities() {
     toast.success("Activity created successfully!");
     setShowAddDialog(false);
   };
+
+  if (isLoading) {
+    return (
+      <AnimatedLayout>
+        <div className="flex justify-center py-12">
+          <p className="text-muted-foreground">Loading activities data...</p>
+        </div>
+      </AnimatedLayout>
+    );
+  }
 
   return (
     <AnimatedLayout>
