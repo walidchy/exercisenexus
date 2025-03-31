@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Outlet } from "react-router-dom";
-import { Sidebar } from "@/components/layout/Sidebar";
+import { SidebarWithRouter } from "@/components/layout/Sidebar";
 import { useRequireAuth } from "@/hooks/useAuth";
 import { Toaster } from "sonner";
 import AnimatedLayout from "@/components/ui/AnimatedLayout";
@@ -24,7 +24,7 @@ export function AppLayout({ allowedRoles }: AppLayoutProps) {
   
   return (
     <div className="flex h-screen w-full overflow-hidden">
-      <Sidebar />
+      <SidebarWithRouter />
       
       <main className="flex-1 overflow-auto bg-background">
         <AnimatedLayout className="p-6 max-w-7xl mx-auto">

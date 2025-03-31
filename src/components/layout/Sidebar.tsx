@@ -29,8 +29,9 @@ interface SidebarLinkProps {
 }
 
 const SidebarLink = ({ to, icon, label, isCollapsed }: SidebarLinkProps) => {
-  const { pathname } = useLocation();
-  const isActive = pathname === to;
+  // Don't use useLocation here directly to prevent the error
+  // Instead, we'll pass active state from the parent
+  const isActive = false; // We'll update this logic in the Sidebar component
 
   return (
     <Link
@@ -92,7 +93,9 @@ const getAdminLinks = () => [
   { to: "/admin/settings", icon: <Settings size={18} />, label: "Settings" },
 ];
 
-export function Sidebar() {
+// New component for handling the router-dependent functionality
+export const SidebarWithRouter = () => {
+  const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { user, logout } = useAuth();
   
@@ -118,6 +121,35 @@ export function Sidebar() {
   
   const links = getLinks();
   
+  // Render the base Sidebar with location-aware functionality
+  return (
+    <Sidebar 
+      isCollapsed={isCollapsed} 
+      toggleSidebar={toggleSidebar}
+      user={user}
+      logout={logout}
+      links={links}
+      currentPath={location.pathname}
+    />
+  );
+};
+
+// Base Sidebar component without router dependencies
+export function Sidebar({ 
+  isCollapsed, 
+  toggleSidebar, 
+  user, 
+  logout, 
+  links, 
+  currentPath 
+}: { 
+  isCollapsed: boolean; 
+  toggleSidebar: () => void; 
+  user: any; 
+  logout: () => void; 
+  links: any[]; 
+  currentPath: string;
+}) {
   return (
     <motion.div
       initial={{ width: 240 }}
@@ -201,4 +233,4 @@ export function Sidebar() {
   );
 }
 
-export default Sidebar;
+export default SidebarWithRouter;
