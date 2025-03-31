@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { api } from "../services/api";
+import axios from "axios";
 import { API_BASE_URL, getHeaders } from "../config/api";
 
 // Define user types based on roles
@@ -166,6 +167,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(userData);
       localStorage.setItem("gym_user", JSON.stringify(userData));
       
+      // Set default Authorization header for axios requests
+      axios.defaults.headers.common['Authorization'] = `Bearer ${response.token}`;
+      
       // Redirect based on user role
       if (userData.role === "member") {
         navigate("/member");
@@ -217,6 +221,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         console.error("Logout API error:", err);
       });
     }
+    
+    // Clear axios Authorization header
+    delete axios.defaults.headers.common['Authorization'];
     
     setUser(null);
     localStorage.removeItem("gym_user");

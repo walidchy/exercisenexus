@@ -6,9 +6,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AnimatedLayout from "@/components/ui/AnimatedLayout";
 import { Activity, Calendar, Clock, Users, MapPin, Dumbbell, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { api } from "@/services/api";
+import axios from "axios";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL, getHeaders } from "@/config/api";
 
 // Define activity interface
 interface ActivityType {
@@ -42,16 +43,24 @@ export default function Activities() {
   const { user } = useAuth();
   const navigate = useNavigate();
   
-  // Fetch activities from API
+  // Fetch activities from API using axios
   useEffect(() => {
     const fetchActivities = async () => {
       if (!user?.token) return;
       
       try {
         setIsLoading(true);
-        const params = filter !== "all" ? { category: filter } : undefined;
-        const data = await api.getActivities(user.token, params);
-        setActivities(data);
+        let url = `${API_BASE_URL}/activities`;
+        
+        if (filter !== "all") {
+          url += `?category=${filter}`;
+        }
+        
+        const response = await axios.get(url, {
+          headers: getHeaders(user.token)
+        });
+        
+        setActivities(response.data);
       } catch (error) {
         console.error("Error fetching activities:", error);
         toast.error("Failed to load activities");
