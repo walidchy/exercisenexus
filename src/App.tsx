@@ -39,7 +39,15 @@ import AddUser from "./pages/admin/AddUser";
 // AppLayout
 import { AppLayout } from "./components/layout/AppLayout";
 
-const queryClient = new QueryClient();
+// Create a new query client instance
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
