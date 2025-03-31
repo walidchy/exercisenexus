@@ -26,13 +26,10 @@ interface SidebarLinkProps {
   icon: React.ReactNode;
   label: string;
   isCollapsed: boolean;
+  isActive: boolean;
 }
 
-const SidebarLink = ({ to, icon, label, isCollapsed }: SidebarLinkProps) => {
-  // Don't use useLocation here directly to prevent the error
-  // Instead, we'll pass active state from the parent
-  const isActive = false; // We'll update this logic in the Sidebar component
-
+const SidebarLink = ({ to, icon, label, isCollapsed, isActive }: SidebarLinkProps) => {
   return (
     <Link
       to={to}
@@ -95,43 +92,49 @@ const getAdminLinks = () => [
 
 // New component for handling the router-dependent functionality
 export const SidebarWithRouter = () => {
-  const location = useLocation();
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const { user, logout } = useAuth();
-  
-  const toggleSidebar = () => {
-    setIsCollapsed(!isCollapsed);
-  };
-  
-  // Get links based on user role
-  const getLinks = () => {
-    if (!user) return [];
+  try {
+    const location = useLocation();
+    const [isCollapsed, setIsCollapsed] = useState(false);
+    const { user, logout } = useAuth();
     
-    switch (user.role) {
-      case "member":
-        return getMemberLinks();
-      case "trainer":
-        return getTrainerLinks();
-      case "admin":
-        return getAdminLinks();
-      default:
-        return [];
-    }
-  };
-  
-  const links = getLinks();
-  
-  // Render the base Sidebar with location-aware functionality
-  return (
-    <Sidebar 
-      isCollapsed={isCollapsed} 
-      toggleSidebar={toggleSidebar}
-      user={user}
-      logout={logout}
-      links={links}
-      currentPath={location.pathname}
-    />
-  );
+    const toggleSidebar = () => {
+      setIsCollapsed(!isCollapsed);
+    };
+    
+    // Get links based on user role
+    const getLinks = () => {
+      if (!user) return [];
+      
+      switch (user.role) {
+        case "member":
+          return getMemberLinks();
+        case "trainer":
+          return getTrainerLinks();
+        case "admin":
+          return getAdminLinks();
+        default:
+          return [];
+      }
+    };
+    
+    const links = getLinks();
+    
+    // Render the base Sidebar with location-aware functionality
+    return (
+      <Sidebar 
+        isCollapsed={isCollapsed} 
+        toggleSidebar={toggleSidebar}
+        user={user}
+        logout={logout}
+        links={links}
+        currentPath={location.pathname}
+      />
+    );
+  } catch (error) {
+    // Fallback for when the component is rendered outside Router context
+    console.error("SidebarWithRouter error:", error);
+    return null;
+  }
 };
 
 // Base Sidebar component without router dependencies
@@ -211,6 +214,7 @@ export function Sidebar({
             icon={link.icon}
             label={link.label}
             isCollapsed={isCollapsed}
+            isActive={currentPath === link.to}
           />
         ))}
       </div>
