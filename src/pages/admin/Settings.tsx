@@ -257,6 +257,9 @@ export default function SettingsPage() {
 
   // Use default settings if settings is null
   const currentSettings = settings || defaultSettings;
+  // Get safe user information with fallbacks to prevent "undefined" errors
+  const userInitial = user?.name ? user.name.charAt(0) : "U";
+  const userName = user?.name || "Guest User";
 
   return (
     <AnimatedLayout>
