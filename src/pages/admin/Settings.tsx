@@ -98,78 +98,80 @@ export default function SettingsPage() {
         
         // In a real app, we would use the API service with the user's token
         // For now, we'll use a direct axios call to our mock API
-        const response = await axios.get('/api/admin/settings');
-        setSettings(response.data);
-        
-        // Update the derived states
-        if (response.data.notifications) {
-          setEmailNotifications(response.data.notifications.emailNotifications);
-          setSmsNotifications(response.data.notifications.smsNotifications);
-          setAppNotifications(response.data.notifications.appNotifications);
-        }
-      } catch (err) {
-        console.error('Error fetching settings:', err);
-        setError('Failed to load settings. Please try again later.');
-        
-        // For demo purposes, set mock data when real fetch fails
-        const mockData: SettingsData = {
-          gymInfo: {
-            name: "GymPro Fitness Center",
-            email: "contact@gympro.com",
-            phone: "+1 (555) 123-4567",
-            website: "https://gympro.com",
-            address: "123 Fitness Street, Gym City, GC 12345"
-          },
-          businessHours: [
-            { day: "Monday", openTime: "06:00", closeTime: "22:00", isOpen: true },
-            { day: "Tuesday", openTime: "06:00", closeTime: "22:00", isOpen: true },
-            { day: "Wednesday", openTime: "06:00", closeTime: "22:00", isOpen: true },
-            { day: "Thursday", openTime: "06:00", closeTime: "22:00", isOpen: true },
-            { day: "Friday", openTime: "06:00", closeTime: "22:00", isOpen: true },
-            { day: "Saturday", openTime: "06:00", closeTime: "22:00", isOpen: true },
-            { day: "Sunday", openTime: "10:00", closeTime: "16:00", isOpen: false }
-          ],
-          notifications: {
-            emailNotifications: true,
-            smsNotifications: false,
-            appNotifications: true,
-            notifyEvents: {
-              newMember: true,
-              booking: true,
-              cancelation: true,
-              payment: true,
-              feedback: false,
-              subscription: true
-            }
-          },
-          emailTemplates: [
-            { id: "welcome", name: "Welcome Email", subject: "Welcome to GymPro!" },
-            { id: "booking-confirm", name: "Booking Confirmation", subject: "Your booking has been confirmed!" },
-            { id: "payment-receipt", name: "Payment Receipt", subject: "Thank you for your payment!" }
-          ],
-          security: {
-            enforceStrongPasswords: true,
-            sessionTimeout: 30,
-            loginAttempts: 5
-          },
-          system: {
-            gymCapacity: 150,
-            bookingWindow: 14,
-            cancellationPeriod: 12,
-            maintenanceMode: false
-          },
-          localization: {
-            language: "en-US",
-            timeZone: "America/New_York",
-            dateFormat: "MM/DD/YYYY",
-            currency: "USD"
+        try {
+          const response = await axios.get('/api/admin/settings');
+          setSettings(response.data);
+          
+          // Update the derived states
+          if (response.data.notifications) {
+            setEmailNotifications(response.data.notifications.emailNotifications);
+            setSmsNotifications(response.data.notifications.smsNotifications);
+            setAppNotifications(response.data.notifications.appNotifications);
           }
-        };
-        
-        setSettings(mockData);
-        setEmailNotifications(mockData.notifications.emailNotifications);
-        setSmsNotifications(mockData.notifications.smsNotifications);
-        setAppNotifications(mockData.notifications.appNotifications);
+        } catch (err) {
+          console.error('Error fetching settings:', err);
+          setError('Failed to load settings. Please try again later.');
+          
+          // For demo purposes, set mock data when real fetch fails
+          const mockData: SettingsData = {
+            gymInfo: {
+              name: "GymPro Fitness Center",
+              email: "contact@gympro.com",
+              phone: "+1 (555) 123-4567",
+              website: "https://gympro.com",
+              address: "123 Fitness Street, Gym City, GC 12345"
+            },
+            businessHours: [
+              { day: "Monday", openTime: "06:00", closeTime: "22:00", isOpen: true },
+              { day: "Tuesday", openTime: "06:00", closeTime: "22:00", isOpen: true },
+              { day: "Wednesday", openTime: "06:00", closeTime: "22:00", isOpen: true },
+              { day: "Thursday", openTime: "06:00", closeTime: "22:00", isOpen: true },
+              { day: "Friday", openTime: "06:00", closeTime: "22:00", isOpen: true },
+              { day: "Saturday", openTime: "06:00", closeTime: "22:00", isOpen: true },
+              { day: "Sunday", openTime: "10:00", closeTime: "16:00", isOpen: false }
+            ],
+            notifications: {
+              emailNotifications: true,
+              smsNotifications: false,
+              appNotifications: true,
+              notifyEvents: {
+                newMember: true,
+                booking: true,
+                cancelation: true,
+                payment: true,
+                feedback: false,
+                subscription: true
+              }
+            },
+            emailTemplates: [
+              { id: "welcome", name: "Welcome Email", subject: "Welcome to GymPro!" },
+              { id: "booking-confirm", name: "Booking Confirmation", subject: "Your booking has been confirmed!" },
+              { id: "payment-receipt", name: "Payment Receipt", subject: "Thank you for your payment!" }
+            ],
+            security: {
+              enforceStrongPasswords: true,
+              sessionTimeout: 30,
+              loginAttempts: 5
+            },
+            system: {
+              gymCapacity: 150,
+              bookingWindow: 14,
+              cancellationPeriod: 12,
+              maintenanceMode: false
+            },
+            localization: {
+              language: "en-US",
+              timeZone: "America/New_York",
+              dateFormat: "MM/DD/YYYY",
+              currency: "USD"
+            }
+          };
+          
+          setSettings(mockData);
+          setEmailNotifications(mockData.notifications.emailNotifications);
+          setSmsNotifications(mockData.notifications.smsNotifications);
+          setAppNotifications(mockData.notifications.appNotifications);
+        }
       } finally {
         setLoading(false);
       }

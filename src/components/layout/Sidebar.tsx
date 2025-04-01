@@ -194,13 +194,13 @@ export function Sidebar({
         isCollapsed ? "justify-center" : "justify-start"
       )}>
         <div className="flex-shrink-0 w-9 h-9 bg-primary/10 rounded-full flex items-center justify-center text-primary">
-          {user?.name.charAt(0) || "U"}
+          {user?.name ? user.name.charAt(0) : "U"}
         </div>
         
         {!isCollapsed && (
           <div className="ml-3 overflow-hidden">
-            <p className="text-sm font-medium truncate">{user?.name}</p>
-            <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>
+            <p className="text-sm font-medium truncate">{user?.name || "User"}</p>
+            <p className="text-xs text-muted-foreground capitalize">{user?.role || "guest"}</p>
           </div>
         )}
       </div>
