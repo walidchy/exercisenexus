@@ -79,13 +79,68 @@ interface SettingsData {
   localization: LocalizationSettings;
 }
 
+// Default settings data to use as fallback
+const defaultSettings: SettingsData = {
+  gymInfo: {
+    name: "GymPro Fitness Center",
+    email: "contact@gympro.com",
+    phone: "+1 (555) 123-4567",
+    website: "https://gympro.com",
+    address: "123 Fitness Street, Gym City, GC 12345"
+  },
+  businessHours: [
+    { day: "Monday", openTime: "06:00", closeTime: "22:00", isOpen: true },
+    { day: "Tuesday", openTime: "06:00", closeTime: "22:00", isOpen: true },
+    { day: "Wednesday", openTime: "06:00", closeTime: "22:00", isOpen: true },
+    { day: "Thursday", openTime: "06:00", closeTime: "22:00", isOpen: true },
+    { day: "Friday", openTime: "06:00", closeTime: "22:00", isOpen: true },
+    { day: "Saturday", openTime: "08:00", closeTime: "20:00", isOpen: true },
+    { day: "Sunday", openTime: "10:00", closeTime: "16:00", isOpen: false }
+  ],
+  notifications: {
+    emailNotifications: true,
+    smsNotifications: false,
+    appNotifications: true,
+    notifyEvents: {
+      newMember: true,
+      booking: true,
+      cancelation: true,
+      payment: true,
+      feedback: false,
+      subscription: true
+    }
+  },
+  emailTemplates: [
+    { id: "welcome", name: "Welcome Email", subject: "Welcome to GymPro!" },
+    { id: "booking-confirm", name: "Booking Confirmation", subject: "Your booking has been confirmed!" },
+    { id: "payment-receipt", name: "Payment Receipt", subject: "Thank you for your payment!" }
+  ],
+  security: {
+    enforceStrongPasswords: true,
+    sessionTimeout: 30,
+    loginAttempts: 5
+  },
+  system: {
+    gymCapacity: 150,
+    bookingWindow: 14,
+    cancellationPeriod: 12,
+    maintenanceMode: false
+  },
+  localization: {
+    language: "en-US",
+    timeZone: "America/New_York",
+    dateFormat: "MM/DD/YYYY",
+    currency: "USD"
+  }
+};
+
 export default function SettingsPage() {
   const { user } = useAuth();
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [settings, setSettings] = useState<SettingsData | null>(null);
 
-  // Derived states from settings
+  // Derived states from settings with safe defaults
   const [emailNotifications, setEmailNotifications] = useState<boolean>(true);
   const [smsNotifications, setSmsNotifications] = useState<boolean>(false);
   const [appNotifications, setAppNotifications] = useState<boolean>(true);
@@ -113,64 +168,10 @@ export default function SettingsPage() {
           setError('Failed to load settings. Please try again later.');
           
           // For demo purposes, set mock data when real fetch fails
-          const mockData: SettingsData = {
-            gymInfo: {
-              name: "GymPro Fitness Center",
-              email: "contact@gympro.com",
-              phone: "+1 (555) 123-4567",
-              website: "https://gympro.com",
-              address: "123 Fitness Street, Gym City, GC 12345"
-            },
-            businessHours: [
-              { day: "Monday", openTime: "06:00", closeTime: "22:00", isOpen: true },
-              { day: "Tuesday", openTime: "06:00", closeTime: "22:00", isOpen: true },
-              { day: "Wednesday", openTime: "06:00", closeTime: "22:00", isOpen: true },
-              { day: "Thursday", openTime: "06:00", closeTime: "22:00", isOpen: true },
-              { day: "Friday", openTime: "06:00", closeTime: "22:00", isOpen: true },
-              { day: "Saturday", openTime: "06:00", closeTime: "22:00", isOpen: true },
-              { day: "Sunday", openTime: "10:00", closeTime: "16:00", isOpen: false }
-            ],
-            notifications: {
-              emailNotifications: true,
-              smsNotifications: false,
-              appNotifications: true,
-              notifyEvents: {
-                newMember: true,
-                booking: true,
-                cancelation: true,
-                payment: true,
-                feedback: false,
-                subscription: true
-              }
-            },
-            emailTemplates: [
-              { id: "welcome", name: "Welcome Email", subject: "Welcome to GymPro!" },
-              { id: "booking-confirm", name: "Booking Confirmation", subject: "Your booking has been confirmed!" },
-              { id: "payment-receipt", name: "Payment Receipt", subject: "Thank you for your payment!" }
-            ],
-            security: {
-              enforceStrongPasswords: true,
-              sessionTimeout: 30,
-              loginAttempts: 5
-            },
-            system: {
-              gymCapacity: 150,
-              bookingWindow: 14,
-              cancellationPeriod: 12,
-              maintenanceMode: false
-            },
-            localization: {
-              language: "en-US",
-              timeZone: "America/New_York",
-              dateFormat: "MM/DD/YYYY",
-              currency: "USD"
-            }
-          };
-          
-          setSettings(mockData);
-          setEmailNotifications(mockData.notifications.emailNotifications);
-          setSmsNotifications(mockData.notifications.smsNotifications);
-          setAppNotifications(mockData.notifications.appNotifications);
+          setSettings(defaultSettings);
+          setEmailNotifications(defaultSettings.notifications.emailNotifications);
+          setSmsNotifications(defaultSettings.notifications.smsNotifications);
+          setAppNotifications(defaultSettings.notifications.appNotifications);
         }
       } finally {
         setLoading(false);
@@ -254,15 +255,8 @@ export default function SettingsPage() {
     );
   }
 
-  if (!settings) {
-    return (
-      <AnimatedLayout>
-        <div className="flex items-center justify-center h-full">
-          <p className="text-muted-foreground">No settings data available.</p>
-        </div>
-      </AnimatedLayout>
-    );
-  }
+  // Use default settings if settings is null
+  const currentSettings = settings || defaultSettings;
 
   return (
     <AnimatedLayout>
@@ -297,7 +291,7 @@ export default function SettingsPage() {
                       <Label htmlFor="gymName">Gym Name</Label>
                       <Input 
                         id="gymName" 
-                        defaultValue={settings.gymInfo.name} 
+                        defaultValue={currentSettings.gymInfo.name} 
                       />
                     </div>
                     <div className="space-y-2">
@@ -305,21 +299,21 @@ export default function SettingsPage() {
                       <Input 
                         id="email" 
                         type="email" 
-                        defaultValue={settings.gymInfo.email} 
+                        defaultValue={currentSettings.gymInfo.email} 
                       />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="phone">Contact Phone</Label>
                       <Input 
                         id="phone" 
-                        defaultValue={settings.gymInfo.phone} 
+                        defaultValue={currentSettings.gymInfo.phone} 
                       />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="website">Website</Label>
                       <Input 
                         id="website" 
-                        defaultValue={settings.gymInfo.website} 
+                        defaultValue={currentSettings.gymInfo.website} 
                       />
                     </div>
                   </div>
@@ -327,7 +321,7 @@ export default function SettingsPage() {
                     <Label htmlFor="address">Address</Label>
                     <Textarea 
                       id="address" 
-                      defaultValue={settings.gymInfo.address} 
+                      defaultValue={currentSettings.gymInfo.address} 
                     />
                   </div>
                 </CardContent>
@@ -349,7 +343,7 @@ export default function SettingsPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {settings.businessHours.map((hour) => (
+                  {currentSettings.businessHours.map((hour) => (
                     <div key={hour.day} className="flex items-center justify-between">
                       <span className="font-medium w-28">{hour.day}</span>
                       <div className="flex items-center gap-2">
@@ -432,27 +426,27 @@ export default function SettingsPage() {
                     <Label>Events to Notify</Label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="flex items-center gap-2">
-                        <Switch defaultChecked={settings.notifications.notifyEvents.newMember} id="new-member" />
+                        <Switch defaultChecked={currentSettings.notifications.notifyEvents.newMember} id="new-member" />
                         <Label htmlFor="new-member">New Member Registration</Label>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Switch defaultChecked={settings.notifications.notifyEvents.booking} id="booking" />
+                        <Switch defaultChecked={currentSettings.notifications.notifyEvents.booking} id="booking" />
                         <Label htmlFor="booking">New Booking</Label>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Switch defaultChecked={settings.notifications.notifyEvents.cancelation} id="cancelation" />
+                        <Switch defaultChecked={currentSettings.notifications.notifyEvents.cancelation} id="cancelation" />
                         <Label htmlFor="cancelation">Booking Cancelation</Label>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Switch defaultChecked={settings.notifications.notifyEvents.payment} id="payment" />
+                        <Switch defaultChecked={currentSettings.notifications.notifyEvents.payment} id="payment" />
                         <Label htmlFor="payment">New Payment</Label>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Switch defaultChecked={settings.notifications.notifyEvents.feedback} id="feedback" />
+                        <Switch defaultChecked={currentSettings.notifications.notifyEvents.feedback} id="feedback" />
                         <Label htmlFor="feedback">Member Feedback</Label>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Switch defaultChecked={settings.notifications.notifyEvents.subscription} id="subscription" />
+                        <Switch defaultChecked={currentSettings.notifications.notifyEvents.subscription} id="subscription" />
                         <Label htmlFor="subscription">Subscription Changes</Label>
                       </div>
                     </div>
@@ -475,7 +469,7 @@ export default function SettingsPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {settings.emailTemplates.map((template) => (
+                {currentSettings.emailTemplates.map((template) => (
                   <div key={template.id} className="space-y-2">
                     <div className="flex items-center justify-between">
                       <Label htmlFor={template.id}>{template.name}</Label>
@@ -551,7 +545,7 @@ export default function SettingsPage() {
                       Require all users to use strong passwords
                     </p>
                   </div>
-                  <Switch defaultChecked={settings.security.enforceStrongPasswords} />
+                  <Switch defaultChecked={currentSettings.security.enforceStrongPasswords} />
                 </div>
                 
                 <div className="flex items-center justify-between">
@@ -565,7 +559,7 @@ export default function SettingsPage() {
                     <Input 
                       className="w-16 mr-2" 
                       type="number" 
-                      defaultValue={settings.security.sessionTimeout.toString()} 
+                      defaultValue={currentSettings.security.sessionTimeout.toString()} 
                       min="5" 
                       max="120" 
                     />
@@ -584,7 +578,7 @@ export default function SettingsPage() {
                     <Input 
                       className="w-16 mr-2" 
                       type="number" 
-                      defaultValue={settings.security.loginAttempts.toString()} 
+                      defaultValue={currentSettings.security.loginAttempts.toString()} 
                       min="3" 
                       max="10" 
                     />
@@ -615,7 +609,7 @@ export default function SettingsPage() {
                   <Input 
                     id="gymCapacity" 
                     type="number" 
-                    defaultValue={settings.system.gymCapacity.toString()} 
+                    defaultValue={currentSettings.system.gymCapacity.toString()} 
                     min="10" 
                   />
                   <p className="text-xs text-muted-foreground">
@@ -628,7 +622,7 @@ export default function SettingsPage() {
                   <Input 
                     id="bookingWindow" 
                     type="number" 
-                    defaultValue={settings.system.bookingWindow.toString()} 
+                    defaultValue={currentSettings.system.bookingWindow.toString()} 
                     min="1" 
                     max="90" 
                   />
@@ -642,7 +636,7 @@ export default function SettingsPage() {
                   <Input 
                     id="cancellationPeriod" 
                     type="number" 
-                    defaultValue={settings.system.cancellationPeriod.toString()} 
+                    defaultValue={currentSettings.system.cancellationPeriod.toString()} 
                     min="1" 
                     max="48" 
                   />
@@ -658,7 +652,7 @@ export default function SettingsPage() {
                       Put the system in maintenance mode
                     </p>
                   </div>
-                  <Switch defaultChecked={settings.system.maintenanceMode} />
+                  <Switch defaultChecked={currentSettings.system.maintenanceMode} />
                 </div>
               </CardContent>
               <CardFooter className="flex justify-end">
@@ -683,7 +677,7 @@ export default function SettingsPage() {
                     <select 
                       id="language" 
                       className="w-full flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                      defaultValue={settings.localization.language}
+                      defaultValue={currentSettings.localization.language}
                     >
                       <option value="en-US">English (US)</option>
                       <option value="en-GB">English (UK)</option>
@@ -697,7 +691,7 @@ export default function SettingsPage() {
                     <select 
                       id="timeZone" 
                       className="w-full flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                      defaultValue={settings.localization.timeZone}
+                      defaultValue={currentSettings.localization.timeZone}
                     >
                       <option value="America/New_York">Eastern Time (US & Canada)</option>
                       <option value="America/Chicago">Central Time (US & Canada)</option>
@@ -712,7 +706,7 @@ export default function SettingsPage() {
                     <select 
                       id="dateFormat" 
                       className="w-full flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                      defaultValue={settings.localization.dateFormat}
+                      defaultValue={currentSettings.localization.dateFormat}
                     >
                       <option value="MM/DD/YYYY">MM/DD/YYYY</option>
                       <option value="DD/MM/YYYY">DD/MM/YYYY</option>
@@ -724,7 +718,7 @@ export default function SettingsPage() {
                     <select 
                       id="currency" 
                       className="w-full flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                      defaultValue={settings.localization.currency}
+                      defaultValue={currentSettings.localization.currency}
                     >
                       <option value="USD">US Dollar ($)</option>
                       <option value="EUR">Euro (€)</option>
