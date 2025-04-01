@@ -25,6 +25,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   verifyUser: (userId: number) => Promise<void>;
+  rejectUser: (userId: number) => Promise<void>;
 }
 
 // Create context with default values
@@ -34,6 +35,7 @@ const AuthContext = createContext<AuthContextType>({
   login: async () => {},
   logout: () => {},
   verifyUser: async () => {},
+  rejectUser: async () => {},
 });
 
 // Flag to use mock data when backend is not available
@@ -213,6 +215,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // User rejection function (for admin)
+  const rejectUser = async (userId: number) => {
+    try {
+      if (USE_MOCK_DATA) {
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 800));
+        toast.success("User rejected successfully (Mock Mode)");
+        return Promise.resolve();
+      }
+      
+      if (!user?.token) {
+        throw new Error("No auth token available");
+      }
+      
+      await api.rejectUser(user.token, userId);
+      toast.success("User rejected successfully");
+      return Promise.resolve();
+    } catch (error) {
+      console.error("Rejection error:", error);
+      toast.error("Rejection failed: " + (error as Error).message);
+      throw error;
+    }
+  };
+
   // Logout function
   const logout = () => {
     if (!USE_MOCK_DATA && user?.token) {
@@ -232,7 +258,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout, verifyUser }}>
+    <AuthContext.Provider value={{ user, isLoading, login, logout, verifyUser, rejectUser }}>
       {children}
     </AuthContext.Provider>
   );

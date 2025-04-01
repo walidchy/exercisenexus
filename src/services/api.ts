@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 import { API_BASE_URL, getHeaders, handleApiError, USE_MOCK_DATA, MOCK_DATA } from '../config/api';
 
@@ -567,6 +566,35 @@ export const api = {
       return response.data;
     } catch (error) {
       console.error('Verify user error:', error);
+      throw error;
+    }
+  },
+
+  rejectUser: async (token: string, userId: number) => {
+    if (USE_MOCK_DATA) {
+      await simulateApiDelay();
+      
+      // Find the user
+      const userIndex = MOCK_DATA.users.findIndex(u => u.id === userId);
+      if (userIndex === -1) throw new Error("User not found");
+      
+      // Update user status to rejected
+      const updatedUser = {
+        ...MOCK_DATA.users[userIndex],
+        isVerified: false,
+        status: "rejected"
+      };
+      
+      return updatedUser;
+    }
+    
+    try {
+      const response = await apiClient.patch(`/users/${userId}/reject`, {}, {
+        headers: getHeaders(token)
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Reject user error:', error);
       throw error;
     }
   },

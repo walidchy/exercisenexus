@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { api } from "@/services/api";
 
 // Mock pending users data
 const pendingUsers = [
@@ -63,7 +65,28 @@ export default function UserVerification() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [users, setUsers] = useState(pendingUsers);
-  const { verifyUser } = useAuth();
+  const [isLoading, setIsLoading] = useState<{[key: number]: boolean}>({});
+  const { user, verifyUser } = useAuth();
+  
+  // Fetch users when component mounts
+  React.useEffect(() => {
+    const fetchPendingUsers = async () => {
+      try {
+        if (user?.token) {
+          const fetchedUsers = await api.getUsers(user.token, undefined, false);
+          setUsers(fetchedUsers);
+        }
+      } catch (error) {
+        console.error("Failed to fetch users:", error);
+        toast.error("Failed to load pending users. Please try again.");
+      }
+    };
+    
+    // Only use the API if we're not in mock mode
+    if (!import.meta.env.VITE_USE_MOCK_DATA) {
+      fetchPendingUsers();
+    }
+  }, [user]);
   
   const filteredUsers = users.filter(user => {
     // Apply search filter
@@ -80,25 +103,52 @@ export default function UserVerification() {
   
   const handleVerify = async (userId: number) => {
     try {
+      setIsLoading(prev => ({ ...prev, [userId]: true }));
+      
+      // Call the API to verify the user
       await verifyUser(userId);
+      
       // Update local state to reflect the change
       setUsers(users.map(user => 
         user.id === userId ? { ...user, status: "verified" } : user
       ));
+      
       toast.success("User verified successfully");
     } catch (error) {
       console.error("Failed to verify user:", error);
       toast.error("Failed to verify user. Please try again.");
+    } finally {
+      setIsLoading(prev => ({ ...prev, [userId]: false }));
     }
   };
 
-  const handleReject = (userId: number) => {
-    // In a real app, this would call an API to reject the user
-    toast.success("User rejected successfully");
-    // Update local state to reflect the change
-    setUsers(users.map(user => 
-      user.id === userId ? { ...user, status: "rejected" } : user
-    ));
+  const handleReject = async (userId: number) => {
+    try {
+      setIsLoading(prev => ({ ...prev, [userId]: true }));
+      
+      // In a real app, this would call an API to reject the user
+      if (user?.token) {
+        // If we have an actual API endpoint for rejecting users
+        if (!import.meta.env.VITE_USE_MOCK_DATA) {
+          await api.rejectUser(user.token, userId);
+        } else {
+          // Simulate API delay for mock data
+          await new Promise(resolve => setTimeout(resolve, 800));
+        }
+      }
+      
+      // Update local state to reflect the change
+      setUsers(users.map(user => 
+        user.id === userId ? { ...user, status: "rejected" } : user
+      ));
+      
+      toast.success("User rejected successfully");
+    } catch (error) {
+      console.error("Failed to reject user:", error);
+      toast.error("Failed to reject user. Please try again.");
+    } finally {
+      setIsLoading(prev => ({ ...prev, [userId]: false }));
+    }
   };
 
   const getRoleBadgeColor = (role: string) => {
@@ -217,17 +267,31 @@ export default function UserVerification() {
                                 size="sm" 
                                 onClick={() => handleVerify(user.id)}
                                 className="bg-green-600 hover:bg-green-700 text-white"
+                                disabled={isLoading[user.id]}
                               >
-                                <CheckCircle2 size={16} className="mr-1" />
-                                Verify
+                                {isLoading[user.id] ? (
+                                  "Verifying..."
+                                ) : (
+                                  <>
+                                    <CheckCircle2 size={16} className="mr-1" />
+                                    Verify
+                                  </>
+                                )}
                               </Button>
                               <Button 
                                 size="sm" 
                                 variant="destructive"
                                 onClick={() => handleReject(user.id)}
+                                disabled={isLoading[user.id]}
                               >
-                                <XCircle size={16} className="mr-1" />
-                                Reject
+                                {isLoading[user.id] ? (
+                                  "Rejecting..."
+                                ) : (
+                                  <>
+                                    <XCircle size={16} className="mr-1" />
+                                    Reject
+                                  </>
+                                )}
                               </Button>
                             </div>
                           )}
