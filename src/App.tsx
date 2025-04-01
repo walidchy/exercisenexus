@@ -35,6 +35,7 @@ import AdminReports from "./pages/admin/Reports";
 import AdminSettings from "./pages/admin/Settings";
 import UserVerification from "./pages/admin/UserVerification";
 import AddUser from "./pages/admin/AddUser";
+import ApiTest from "./pages/admin/ApiTest";
 
 // AppLayout
 import { AppLayout } from "./components/layout/AppLayout";
@@ -90,6 +91,7 @@ const App = () => (
               <Route path="add-user" element={<AddUser />} />
               <Route path="reports" element={<AdminReports />} />
               <Route path="settings" element={<AdminSettings />} />
+              <Route path="api-test" element={<ApiTest />} />
               {/* Add more admin routes here */}
             </Route>
             
