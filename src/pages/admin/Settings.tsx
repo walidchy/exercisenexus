@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,7 +12,6 @@ import { toast } from "sonner";
 import axios from "axios";
 import { useAuth } from "@/hooks/useAuth";
 
-// Define interfaces for our settings data
 interface GymInfo {
   name: string;
   email: string;
@@ -79,7 +77,6 @@ interface SettingsData {
   localization: LocalizationSettings;
 }
 
-// Default settings data to use as fallback
 const defaultSettings: SettingsData = {
   gymInfo: {
     name: "GymPro Fitness Center",
@@ -140,7 +137,6 @@ export default function SettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [settings, setSettings] = useState<SettingsData | null>(null);
 
-  // Derived states from settings with safe defaults
   const [emailNotifications, setEmailNotifications] = useState<boolean>(true);
   const [smsNotifications, setSmsNotifications] = useState<boolean>(false);
   const [appNotifications, setAppNotifications] = useState<boolean>(true);
@@ -151,13 +147,10 @@ export default function SettingsPage() {
         setLoading(true);
         setError(null);
         
-        // In a real app, we would use the API service with the user's token
-        // For now, we'll use a direct axios call to our mock API
         try {
           const response = await axios.get('/api/admin/settings');
           setSettings(response.data);
           
-          // Update the derived states
           if (response.data.notifications) {
             setEmailNotifications(response.data.notifications.emailNotifications);
             setSmsNotifications(response.data.notifications.smsNotifications);
@@ -167,7 +160,6 @@ export default function SettingsPage() {
           console.error('Error fetching settings:', err);
           setError('Failed to load settings. Please try again later.');
           
-          // For demo purposes, set mock data when real fetch fails
           setSettings(defaultSettings);
           setEmailNotifications(defaultSettings.notifications.emailNotifications);
           setSmsNotifications(defaultSettings.notifications.smsNotifications);
@@ -184,8 +176,7 @@ export default function SettingsPage() {
   const handleSaveGeneral = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // In a real app, we would call api.updateSettings(...)
-      await new Promise(resolve => setTimeout(resolve, 800)); // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 800));
       toast.success("General settings saved successfully!");
     } catch (error) {
       toast.error("Failed to save settings. Please try again.");
@@ -196,7 +187,6 @@ export default function SettingsPage() {
   const handleSaveNotifications = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Prepare the data to send
       const updatedNotifications = {
         ...settings?.notifications,
         emailNotifications,
@@ -204,10 +194,8 @@ export default function SettingsPage() {
         appNotifications
       };
       
-      // In a real app, we would call api.updateNotificationSettings(...)
-      await new Promise(resolve => setTimeout(resolve, 800)); // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 800));
       
-      // Update local state
       if (settings) {
         setSettings({
           ...settings,
@@ -225,8 +213,7 @@ export default function SettingsPage() {
   const handleSaveSecurity = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // In a real app, we would call api.updateSecuritySettings(...)
-      await new Promise(resolve => setTimeout(resolve, 800)); // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 800));
       toast.success("Security settings saved successfully!");
     } catch (error) {
       toast.error("Failed to save security settings. Please try again.");
@@ -255,9 +242,7 @@ export default function SettingsPage() {
     );
   }
 
-  // Use default settings if settings is null
   const currentSettings = settings || defaultSettings;
-  // Get safe user information with fallbacks to prevent "undefined" errors
   const userInitial = user?.name ? user.name.charAt(0) : "U";
   const userName = user?.name || "Guest User";
 
