@@ -8,6 +8,16 @@ import { Label } from "@/components/ui/label";
 import AnimatedLayout from "@/components/ui/AnimatedLayout";
 import { ArrowUpDown, Award, Calendar, Download, FileEdit, Search, Trash, User, UserPlus } from "lucide-react";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // Mock trainer data
 const trainers = [
@@ -71,6 +81,18 @@ const trainers = [
 export default function Trainers() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [showAddDialog, setShowAddDialog] = useState<boolean>(false);
+  const [showViewDialog, setShowViewDialog] = useState<boolean>(false);
+  const [showEditDialog, setShowEditDialog] = useState<boolean>(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
+  const [selectedTrainer, setSelectedTrainer] = useState<any>(null);
+  const [editFormData, setEditFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    specialization: "",
+    status: "",
+    rating: ""
+  });
   
   const filteredTrainers = trainers.filter(trainer => {
     if (!searchQuery) return true;
@@ -90,6 +112,55 @@ export default function Trainers() {
     // In a real app, this would send data to the API
     toast.success("Trainer added successfully!");
     setShowAddDialog(false);
+  };
+
+  const handleViewTrainer = (trainer: any) => {
+    setSelectedTrainer(trainer);
+    setShowViewDialog(true);
+  };
+
+  const handleEditClick = (trainer: any) => {
+    setSelectedTrainer(trainer);
+    setEditFormData({
+      name: trainer.name,
+      email: trainer.email,
+      phone: trainer.phone,
+      specialization: trainer.specialization,
+      status: trainer.status,
+      rating: String(trainer.rating)
+    });
+    setShowEditDialog(true);
+  };
+
+  const handleDeleteClick = (trainer: any) => {
+    setSelectedTrainer(trainer);
+    setShowDeleteDialog(true);
+  };
+
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // In a real app, this would send data to the API
+    toast.success(`Trainer ${selectedTrainer.name} updated successfully!`);
+    setShowEditDialog(false);
+  };
+
+  const handleDeleteConfirm = () => {
+    // In a real app, this would send delete request to the API
+    toast.success(`Trainer ${selectedTrainer.name} deleted successfully!`);
+    setShowDeleteDialog(false);
+  };
+
+  const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setEditFormData(prev => ({
+      ...prev,
+      [id]: value
+    }));
+  };
+
+  const handleExportData = () => {
+    // In a real app, this would generate a CSV/Excel file
+    toast.success("Trainer data exported successfully!");
   };
   
   const getStatusColor = (status: string) => {
@@ -120,7 +191,7 @@ export default function Trainers() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <Button variant="outline" className="flex items-center gap-1">
+            <Button variant="outline" className="flex items-center gap-1" onClick={handleExportData}>
               <Download size={16} />
               <span>Export</span>
             </Button>
@@ -241,13 +312,13 @@ export default function Trainers() {
                       </td>
                       <td className="p-4 align-middle">
                         <div className="flex items-center gap-2">
-                          <Button size="icon" variant="outline">
+                          <Button size="icon" variant="outline" onClick={() => handleViewTrainer(trainer)}>
                             <User size={16} />
                           </Button>
-                          <Button size="icon" variant="outline">
+                          <Button size="icon" variant="outline" onClick={() => handleEditClick(trainer)}>
                             <FileEdit size={16} />
                           </Button>
-                          <Button size="icon" variant="outline" className="text-destructive">
+                          <Button size="icon" variant="outline" className="text-destructive" onClick={() => handleDeleteClick(trainer)}>
                             <Trash size={16} />
                           </Button>
                         </div>
@@ -260,6 +331,167 @@ export default function Trainers() {
           </CardContent>
         </Card>
       </div>
+
+      {/* View Trainer Dialog */}
+      <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Trainer Details</DialogTitle>
+            <DialogDescription>
+              Viewing complete information for this trainer.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedTrainer && (
+            <div className="grid gap-4 py-4">
+              <div className="flex justify-center mb-4">
+                <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center text-primary text-2xl">
+                  {selectedTrainer.name.charAt(0)}
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <Label className="text-muted-foreground">Full Name</Label>
+                <p className="font-medium">{selectedTrainer.name}</p>
+              </div>
+              <div className="grid gap-2">
+                <Label className="text-muted-foreground">Email</Label>
+                <p>{selectedTrainer.email}</p>
+              </div>
+              <div className="grid gap-2">
+                <Label className="text-muted-foreground">Phone</Label>
+                <p>{selectedTrainer.phone}</p>
+              </div>
+              <div className="grid gap-2">
+                <Label className="text-muted-foreground">Join Date</Label>
+                <p>{selectedTrainer.joinDate}</p>
+              </div>
+              <div className="grid gap-2">
+                <Label className="text-muted-foreground">Specialization</Label>
+                <p>{selectedTrainer.specialization}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label className="text-muted-foreground">Status</Label>
+                  <p>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedTrainer.status)}`}>
+                      {selectedTrainer.status}
+                    </span>
+                  </p>
+                </div>
+                <div className="grid gap-2">
+                  <Label className="text-muted-foreground">Rating</Label>
+                  <p className="flex items-center gap-1">
+                    <Award size={14} className="text-yellow-500" />
+                    {selectedTrainer.rating}
+                  </p>
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <Label className="text-muted-foreground">Active Clients</Label>
+                <p>{selectedTrainer.clients}</p>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setShowViewDialog(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Trainer Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit Trainer</DialogTitle>
+            <DialogDescription>
+              Update information for this trainer.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedTrainer && (
+            <form onSubmit={handleEditSubmit}>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input 
+                    id="name" 
+                    value={editFormData.name} 
+                    onChange={handleEditFormChange} 
+                    required 
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    value={editFormData.email} 
+                    onChange={handleEditFormChange} 
+                    required 
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="phone">Phone Number</Label>
+                  <Input 
+                    id="phone" 
+                    value={editFormData.phone} 
+                    onChange={handleEditFormChange} 
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="specialization">Specialization</Label>
+                  <Input 
+                    id="specialization" 
+                    value={editFormData.specialization} 
+                    onChange={handleEditFormChange} 
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="status">Status</Label>
+                    <Input 
+                      id="status" 
+                      value={editFormData.status} 
+                      onChange={handleEditFormChange} 
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="rating">Rating</Label>
+                    <Input 
+                      id="rating" 
+                      type="number" 
+                      step="0.1" 
+                      min="1" 
+                      max="5" 
+                      value={editFormData.rating} 
+                      onChange={handleEditFormChange} 
+                    />
+                  </div>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" type="button" onClick={() => setShowEditDialog(false)}>Cancel</Button>
+                <Button type="submit">Save Changes</Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete {selectedTrainer?.name}'s account and all associated data. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AnimatedLayout>
   );
 }
+
