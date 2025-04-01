@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, HelpCircle } from "lucide-react";
+import { Check, HelpCircle, Loader2 } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -10,8 +10,9 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import AnimatedLayout from "@/components/ui/AnimatedLayout";
-import mockApi from "@/services/mockApi";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
+import { api } from "@/services/api";
 
 interface MembershipPlan {
   id: number;
@@ -25,23 +26,90 @@ interface MembershipPlan {
 export default function MembershipPlans() {
   const [plans, setPlans] = useState<MembershipPlan[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchMembershipPlans = async () => {
       try {
         setLoading(true);
-        const response = await mockApi.get('/membership-plans');
-        setPlans(response.data);
+        if (!user?.token) {
+          throw new Error("No authentication token found");
+        }
+        
+        const response = await api.getMembershipPlans(user.token);
+        setPlans(response);
       } catch (error) {
         console.error("Error fetching membership plans:", error);
         toast.error("Failed to load membership plans");
+        
+        // Fallback to mock data if API fails
+        setPlans([
+          {
+            id: 1,
+            name: "Basic",
+            description: "Perfect for beginners",
+            price: 29.99,
+            features: [
+              "Access to gym during standard hours",
+              "Basic fitness assessment",
+              "Access to standard equipment",
+              "2 group classes per month"
+            ],
+            popular: false
+          },
+          {
+            id: 2,
+            name: "Premium",
+            description: "Our most popular plan",
+            price: 49.99,
+            features: [
+              "24/7 gym access",
+              "Complete fitness assessment",
+              "Access to all equipment",
+              "Unlimited group classes",
+              "1 personal training session monthly"
+            ],
+            popular: true
+          },
+          {
+            id: 3,
+            name: "Elite",
+            description: "For dedicated fitness enthusiasts",
+            price: 79.99,
+            features: [
+              "24/7 gym access",
+              "Advanced fitness assessment",
+              "Access to all equipment",
+              "Unlimited group classes",
+              "4 personal training sessions monthly",
+              "Nutrition consultation",
+              "Access to sauna and spa"
+            ],
+            popular: false
+          }
+        ]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchMembershipPlans();
-  }, []);
+  }, [user]);
+
+  const handleSubscribe = async (planId: number) => {
+    try {
+      if (!user?.token) {
+        toast.error("Please log in to subscribe");
+        return;
+      }
+      
+      await api.subscribe(user.token, planId, "credit_card");
+      toast.success("Successfully subscribed to plan!");
+    } catch (error) {
+      console.error("Error subscribing to plan:", error);
+      toast.error("Failed to subscribe to plan");
+    }
+  };
 
   return (
     <AnimatedLayout>
@@ -55,7 +123,7 @@ export default function MembershipPlans() {
         
         {loading ? (
           <div className="flex justify-center py-12">
-            <p className="text-muted-foreground">Loading membership plans...</p>
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-3">
@@ -87,7 +155,12 @@ export default function MembershipPlans() {
                   </ul>
                 </CardContent>
                 <CardFooter>
-                  <Button className="w-full">Subscribe</Button>
+                  <Button 
+                    className="w-full" 
+                    onClick={() => handleSubscribe(plan.id)}
+                  >
+                    Subscribe
+                  </Button>
                 </CardFooter>
               </Card>
             ))}

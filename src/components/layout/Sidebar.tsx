@@ -153,6 +153,11 @@ export function Sidebar({
   links: any[]; 
   currentPath: string;
 }) {
+  // Default user initial if user or user.name is undefined
+  const userInitial = user?.name ? user.name.charAt(0) : "U";
+  const userName = user?.name || "User";
+  const userRole = user?.role || "guest";
+
   return (
     <motion.div
       initial={{ width: 240 }}
@@ -194,13 +199,13 @@ export function Sidebar({
         isCollapsed ? "justify-center" : "justify-start"
       )}>
         <div className="flex-shrink-0 w-9 h-9 bg-primary/10 rounded-full flex items-center justify-center text-primary">
-          {user?.name ? user.name.charAt(0) : "U"}
+          {userInitial}
         </div>
         
         {!isCollapsed && (
           <div className="ml-3 overflow-hidden">
-            <p className="text-sm font-medium truncate">{user?.name || "User"}</p>
-            <p className="text-xs text-muted-foreground capitalize">{user?.role || "guest"}</p>
+            <p className="text-sm font-medium truncate">{userName}</p>
+            <p className="text-xs text-muted-foreground capitalize">{userRole}</p>
           </div>
         )}
       </div>
