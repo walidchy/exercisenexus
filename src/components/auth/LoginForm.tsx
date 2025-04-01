@@ -19,7 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ArrowRight, AlertCircle } from "lucide-react";
+import { ArrowRight, AlertCircle, Loader2 } from "lucide-react";
 
 // Form schema
 const formSchema = z.object({
@@ -44,6 +44,8 @@ const LoginForm = () => {
   });
   
   const onSubmit = async (values: FormValues) => {
+    if (isLoading) return; // Prevent multiple submits
+    
     setIsLoading(true);
     
     try {
@@ -60,6 +62,8 @@ const LoginForm = () => {
   
   // Quick login buttons for demo
   const handleQuickLogin = (role: string) => {
+    if (isLoading) return; // Prevent actions while loading
+    
     let email = "";
     let password = "password";
     
@@ -123,7 +127,7 @@ const LoginForm = () => {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input placeholder="your@email.com" {...field} />
+                  <Input placeholder="your@email.com" {...field} disabled={isLoading} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -146,7 +150,7 @@ const LoginForm = () => {
                   </a>
                 </div>
                 <FormControl>
-                  <Input type="password" placeholder="••••••••" {...field} />
+                  <Input type="password" placeholder="••••••••" {...field} disabled={isLoading} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -162,6 +166,7 @@ const LoginForm = () => {
                   <Checkbox
                     checked={field.value}
                     onCheckedChange={field.onChange}
+                    disabled={isLoading}
                   />
                 </FormControl>
                 <div className="space-y-1 leading-none">
@@ -175,9 +180,19 @@ const LoginForm = () => {
             type="submit"
             className="w-full"
             disabled={isLoading}
+            aria-busy={isLoading ? 'true' : 'false'}
           >
-            {isLoading ? "Signing in..." : "Sign in"}
-            {!isLoading && <ArrowRight className="ml-2 h-4 w-4" />}
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Signing in...
+              </>
+            ) : (
+              <>
+                Sign in
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </>
+            )}
           </Button>
         </form>
       </Form>
@@ -199,6 +214,7 @@ const LoginForm = () => {
           type="button"
           className="text-xs"
           onClick={() => handleQuickLogin("member")}
+          disabled={isLoading}
         >
           Member Demo
         </Button>
@@ -207,6 +223,7 @@ const LoginForm = () => {
           type="button"
           className="text-xs"
           onClick={() => handleQuickLogin("trainer")}
+          disabled={isLoading}
         >
           Trainer Demo
         </Button>
@@ -215,6 +232,7 @@ const LoginForm = () => {
           type="button"
           className="text-xs"
           onClick={() => handleQuickLogin("admin")}
+          disabled={isLoading}
         >
           Admin Demo
         </Button>

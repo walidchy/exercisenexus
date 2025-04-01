@@ -99,12 +99,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             } catch (error) {
               console.error("Token validation error:", error);
               localStorage.removeItem("gym_user");
+              setUser(null);
             }
           }
+        } else {
+          // No saved user, ensure user is null
+          setUser(null);
         }
       } catch (error) {
         console.error("Auth initialization error:", error);
         localStorage.removeItem("gym_user");
+        setUser(null);
       } finally {
         setIsLoading(false);
       }
@@ -115,6 +120,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Login function
   const login = async (email: string, password: string) => {
+    if (!email || !password) {
+      toast.error("Email and password are required");
+      return Promise.reject(new Error("Email and password are required"));
+    }
+    
     setIsLoading(true);
     
     try {
