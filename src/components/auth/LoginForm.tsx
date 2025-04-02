@@ -19,7 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ArrowRight, AlertCircle, Loader2 } from "lucide-react";
+import { ArrowRight, AlertCircle } from "lucide-react";
 
 // Form schema
 const formSchema = z.object({
@@ -33,6 +33,7 @@ type FormValues = z.infer<typeof formSchema>;
 const LoginForm = () => {
   const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -47,14 +48,14 @@ const LoginForm = () => {
     if (isLoading) return; // Prevent multiple submits
     
     setIsLoading(true);
+    setLoginError(null);
     
     try {
       await login(values.email, values.password);
-      toast.success("Login successful!");
+      // Success toast is handled in the login function
     } catch (error) {
-      // Error handling is done in the login function
-      console.error("Login submission error:", error);
-      toast.error("Login failed. Please check your credentials.");
+      // Set error state for UI feedback
+      setLoginError((error as Error).message || "Login failed. Please check your credentials.");
     } finally {
       setIsLoading(false);
     }
@@ -65,6 +66,7 @@ const LoginForm = () => {
     if (isLoading) return; // Prevent actions while loading
     
     setIsLoading(true);
+    setLoginError(null);
     
     // This would be replaced with actual Google OAuth logic
     // For now, we'll just simulate a login with a mock user
@@ -74,16 +76,16 @@ const LoginForm = () => {
       
       login(mockEmail, mockPassword)
         .then(() => {
-          toast.success("Google login successful!");
+          // Success toast is handled in the login function
         })
         .catch((error) => {
           console.error("Google login error:", error);
-          toast.error("Google login failed. Please try again.");
+          setLoginError("Google login failed. Please try again.");
         })
         .finally(() => {
           setIsLoading(false);
         });
-    }, 1000);
+    }, 800);
   };
   
   return (
@@ -106,6 +108,13 @@ const LoginForm = () => {
           New accounts require admin verification before access.
         </AlertDescription>
       </Alert>
+      
+      {loginError && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{loginError}</AlertDescription>
+        </Alert>
+      )}
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">

@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 import { API_BASE_URL, getHeaders, handleApiError, USE_MOCK_DATA, MOCK_DATA } from '../config/api';
 
@@ -44,16 +45,26 @@ export const api = {
           role: "admin",
           is_verified: true,
           token: "mock-token-admin"
+        },
+        "user@gmail.com": {
+          id: 4,
+          name: "Google User",
+          email: "user@gmail.com",
+          role: "member",
+          is_verified: true,
+          token: "mock-token-google"
         }
       };
       
       const user = mockUsers[email as keyof typeof mockUsers];
       
-      if (user && password === "password") {
+      if (user) {
+        // For mock data, accept any password - this is only for development
+        // In a real app, we would properly validate credentials
         return { user, token: user.token };
       }
       
-      throw new Error("Invalid credentials");
+      throw new Error("User not found");
     }
     
     try {
@@ -62,6 +73,34 @@ export const api = {
       return response.data;
     } catch (error) {
       console.error('Login error:', error);
+      throw error;
+    }
+  },
+
+  forgotPassword: async (email: string) => {
+    if (USE_MOCK_DATA) {
+      await simulateApiDelay();
+      const mockUsers = {
+        "member@example.com": true,
+        "trainer@example.com": true,
+        "admin@example.com": true,
+        "user@gmail.com": true
+      };
+      
+      if (mockUsers[email as keyof typeof mockUsers]) {
+        return { success: true, message: "Password reset email sent" };
+      }
+      
+      // In mock mode, we'll always return success even if email doesn't exist
+      // This is a security best practice to not reveal if an email exists
+      return { success: true, message: "If your email exists in our system, you will receive reset instructions" };
+    }
+    
+    try {
+      const response = await apiClient.post('/forgot-password', { email });
+      return response.data;
+    } catch (error) {
+      console.error('Forgot password error:', error);
       throw error;
     }
   },
@@ -126,6 +165,14 @@ export const api = {
           name: "Admin User",
           email: "admin@example.com",
           role: "admin",
+          is_verified: true
+        };
+      } else if (token === "mock-token-google") {
+        return {
+          id: 4,
+          name: "Google User",
+          email: "user@gmail.com",
+          role: "member",
           is_verified: true
         };
       }

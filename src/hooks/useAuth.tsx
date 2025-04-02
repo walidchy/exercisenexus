@@ -66,6 +66,14 @@ const MOCK_USERS = {
     role: "admin" as UserRole,
     isVerified: true,
     token: "mock-token-admin"
+  },
+  "user@gmail.com": {
+    id: 4,
+    name: "Google User",
+    email: "user@gmail.com",
+    role: "member" as UserRole,
+    isVerified: true,
+    token: "mock-token-google"
   }
 };
 
@@ -132,7 +140,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // Mock login for development without backend
         const mockUser = MOCK_USERS[email as keyof typeof MOCK_USERS];
         
-        if (mockUser && password === "password") {
+        if (mockUser) {
+          // For mock data, accept any password - this is only for development
+          // In a real app, we would properly validate credentials
+          
           // Simulate API delay
           await new Promise(resolve => setTimeout(resolve, 800));
           
@@ -151,11 +162,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           toast.success("Login successful (Mock Mode)");
           return;
         } else {
-          throw new Error("Invalid credentials");
+          throw new Error("User not found");
         }
       }
       
-      // Call the Laravel API via our service
+      // Call the API service
       const response = await api.login(email, password);
       
       // Check if user is verified
@@ -194,7 +205,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       toast.success("Login successful");
     } catch (error) {
       console.error("Login error:", error);
-      toast.error("Login failed: " + (error as Error).message);
+      const errorMessage = (error as Error).message || "Login failed";
+      toast.error(`Login failed: ${errorMessage}`);
       throw error;
     } finally {
       setIsLoading(false);

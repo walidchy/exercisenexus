@@ -17,7 +17,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ArrowLeft, Mail, Loader2, AlertCircle, CheckCircle } from "lucide-react";
+import { ArrowLeft, AlertCircle, CheckCircle } from "lucide-react";
+import { api } from "@/services/api";
 
 // Form schema
 const formSchema = z.object({
@@ -28,7 +29,8 @@ type FormValues = z.infer<typeof formSchema>;
 
 const ForgotPasswordForm = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -38,26 +40,28 @@ const ForgotPasswordForm = () => {
   });
   
   const onSubmit = async (values: FormValues) => {
-    if (isLoading) return; // Prevent multiple submits
+    if (isLoading) return;
     
     setIsLoading(true);
+    setError(null);
     
     try {
-      // In real implementation, we would call an API endpoint
-      // For now, just simulate API call with timeout
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Call password reset API
+      await api.forgotPassword(values.email);
       
+      // Show success state
+      setIsSuccess(true);
       toast.success("Password reset instructions sent to your email");
-      setIsSubmitted(true);
     } catch (error) {
-      console.error("Password reset request error:", error);
-      toast.error("Failed to send password reset email. Please try again.");
+      console.error("Password reset error:", error);
+      setError((error as Error).message || "Failed to send reset instructions. Please try again.");
+      toast.error("Failed to send reset instructions");
     } finally {
       setIsLoading(false);
     }
   };
   
-  if (isSubmitted) {
+  if (isSuccess) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -65,29 +69,35 @@ const ForgotPasswordForm = () => {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md p-8 space-y-8 bg-card rounded-xl shadow-lg"
       >
-        <div className="flex flex-col items-center space-y-4 text-center">
-          <CheckCircle className="h-16 w-16 text-green-500" />
-          <h1 className="text-2xl font-bold">Check your email</h1>
+        <div className="space-y-2 text-center">
+          <CheckCircle className="mx-auto h-12 w-12 text-green-500" />
+          <h1 className="text-3xl font-bold">Check your email</h1>
           <p className="text-muted-foreground">
-            We've sent password reset instructions to <span className="font-medium">{form.getValues("email")}</span>
+            We've sent password reset instructions to your email address.
           </p>
         </div>
         
         <div className="space-y-4">
           <Button
-            variant="outline"
+            variant="default"
             className="w-full"
-            onClick={() => setIsSubmitted(false)}
+            as={Link}
+            to="/login"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Try another email
+            Back to login
           </Button>
           
-          <Button asChild variant="secondary" className="w-full">
-            <Link to="/login">
-              Return to login
-            </Link>
-          </Button>
+          <p className="text-sm text-center text-muted-foreground">
+            Didn't receive the email?{" "}
+            <button
+              type="button"
+              onClick={() => form.handleSubmit(onSubmit)()}
+              className="font-medium text-primary hover:underline"
+            >
+              Click to resend
+            </button>
+          </p>
         </div>
       </motion.div>
     );
@@ -101,18 +111,18 @@ const ForgotPasswordForm = () => {
       className="w-full max-w-md p-8 space-y-8 bg-card rounded-xl shadow-lg"
     >
       <div className="space-y-2 text-center">
-        <h1 className="text-3xl font-bold">Forgot password?</h1>
+        <h1 className="text-3xl font-bold">Reset password</h1>
         <p className="text-muted-foreground">
-          Enter your email and we'll send you reset instructions
+          Enter your email and we'll send you password reset instructions
         </p>
       </div>
       
-      <Alert className="bg-blue-50 text-blue-800 border-blue-100">
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>
-          For this demo, no actual email will be sent.
-        </AlertDescription>
-      </Alert>
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -123,12 +133,7 @@ const ForgotPasswordForm = () => {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input 
-                    placeholder="your@email.com" 
-                    {...field} 
-                    disabled={isLoading}
-                    type="email"
-                  />
+                  <Input placeholder="your@email.com" {...field} disabled={isLoading} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -139,24 +144,14 @@ const ForgotPasswordForm = () => {
             type="submit"
             className="w-full"
             disabled={isLoading}
-            aria-busy={isLoading ? 'true' : 'false'}
+            isLoading={isLoading}
           >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Sending...
-              </>
-            ) : (
-              <>
-                <Mail className="mr-2 h-4 w-4" />
-                Send reset instructions
-              </>
-            )}
+            {!isLoading && "Send reset instructions"}
           </Button>
           
-          <div className="text-center mt-4">
-            <Link 
-              to="/login" 
+          <div className="text-center">
+            <Link
+              to="/login"
               className="text-sm font-medium text-primary hover:underline inline-flex items-center"
             >
               <ArrowLeft className="mr-1 h-3 w-3" />
