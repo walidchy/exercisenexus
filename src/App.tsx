@@ -10,6 +10,7 @@ import { AuthProvider } from "./hooks/useAuth";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
 import NotFound from "./pages/NotFound";
 
 // Member pages
@@ -60,6 +61,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             
             {/* Member routes */}
             <Route path="/member" element={<AppLayout allowedRoles={["member"]} />}>

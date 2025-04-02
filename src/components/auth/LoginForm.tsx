@@ -92,11 +92,6 @@ const LoginForm = () => {
     }, 500);
   };
   
-  const handleForgotPassword = (e: React.MouseEvent) => {
-    e.preventDefault();
-    toast.info("Password reset feature coming soon!");
-  };
-  
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -141,13 +136,12 @@ const LoginForm = () => {
               <FormItem>
                 <div className="flex items-center justify-between">
                   <FormLabel>Password</FormLabel>
-                  <a
-                    href="#"
+                  <Link
+                    to="/forgot-password"
                     className="text-sm font-medium text-primary hover:underline"
-                    onClick={handleForgotPassword}
                   >
                     Forgot password?
-                  </a>
+                  </Link>
                 </div>
                 <FormControl>
                   <Input type="password" placeholder="••••••••" {...field} disabled={isLoading} />
