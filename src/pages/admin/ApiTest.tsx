@@ -1,8 +1,8 @@
 
 import AnimatedLayout from "@/components/ui/AnimatedLayout";
-import ApiTester from "@/components/utils/ApiTester";
+import ApiTester from "@/front-end/components/utils/ApiTester";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { API_BASE_URL, USE_MOCK_DATA } from "@/config/api";
+import { API_BASE_URL, USE_MOCK_DATA } from "@/back-end/config/api";
 
 const ApiTest = () => {
   return (
