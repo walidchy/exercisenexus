@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,73 +18,39 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { api } from "@/services/api";
+import { useAuth } from "@/hooks/useAuth";
 
-// Mock trainer data
-const trainers = [
-  {
-    id: 1,
-    name: "Sarah Miller",
-    email: "sarah@example.com",
-    phone: "+1 (555) 123-7890",
-    joinDate: "2022-05-15",
-    specialization: "Strength & Conditioning",
-    rating: 4.9,
-    status: "Active",
-    clients: 20
-  },
-  {
-    id: 2,
-    name: "Mike Johnson",
-    email: "mike@example.com",
-    phone: "+1 (555) 234-5678",
-    joinDate: "2022-02-10",
-    specialization: "Cardio & HIIT",
-    rating: 4.7,
-    status: "Active",
-    clients: 15
-  },
-  {
-    id: 3,
-    name: "Emma Wilson",
-    email: "emma@example.com",
-    phone: "+1 (555) 345-6789",
-    joinDate: "2023-01-20",
-    specialization: "Yoga & Pilates",
-    rating: 4.8,
-    status: "Active",
-    clients: 18
-  },
-  {
-    id: 4,
-    name: "Alex Rodriguez",
-    email: "alex@example.com",
-    phone: "+1 (555) 456-7890",
-    joinDate: "2022-08-03",
-    specialization: "Weight Training",
-    rating: 4.6,
-    status: "Active",
-    clients: 12
-  },
-  {
-    id: 5,
-    name: "John Smith",
-    email: "john@example.com",
-    phone: "+1 (555) 567-8901",
-    joinDate: "2022-11-15",
-    specialization: "Cycling & Cardio",
-    rating: 4.5,
-    status: "On Leave",
-    clients: 10
-  }
-];
+interface Trainer {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  joinDate: string;
+  specialization: string;
+  rating: number;
+  status: string;
+  clients: number;
+}
 
 export default function Trainers() {
+  const { user, token } = useAuth();
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [showAddDialog, setShowAddDialog] = useState<boolean>(false);
   const [showViewDialog, setShowViewDialog] = useState<boolean>(false);
   const [showEditDialog, setShowEditDialog] = useState<boolean>(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
-  const [selectedTrainer, setSelectedTrainer] = useState<any>(null);
+  const [selectedTrainer, setSelectedTrainer] = useState<Trainer | null>(null);
+  const [trainers, setTrainers] = useState<Trainer[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [addFormData, setAddFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    specialization: "",
+    status: "Active",
+    rating: "4.5"
+  });
   const [editFormData, setEditFormData] = useState({
     name: "",
     email: "",
@@ -93,6 +59,98 @@ export default function Trainers() {
     status: "",
     rating: ""
   });
+  
+  // Fetch trainers on component mount
+  useEffect(() => {
+    fetchTrainers();
+  }, []);
+  
+  const fetchTrainers = async () => {
+    try {
+      setIsLoading(true);
+      // In a real app, we would use the API to fetch trainers
+      // For now, we're using the mock data
+      if (token) {
+        const response = await api.getUsers(token, "trainer");
+        // Transform the data to match our Trainer interface
+        const formattedTrainers = response.map((user: any) => ({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone || "+1 (555) 123-4567",
+          joinDate: user.joined_date || "2022-05-15",
+          specialization: user.specialties?.join(", ") || "General Fitness",
+          rating: user.rating || 4.5,
+          status: user.status || "Active",
+          clients: user.clients || Math.floor(Math.random() * 20) + 5
+        }));
+        setTrainers(formattedTrainers);
+      }
+    } catch (error) {
+      console.error("Error fetching trainers:", error);
+      toast.error("Failed to load trainers");
+      // Fallback to sample data if API fails
+      setTrainers([
+        {
+          id: 1,
+          name: "Sarah Miller",
+          email: "sarah@example.com",
+          phone: "+1 (555) 123-7890",
+          joinDate: "2022-05-15",
+          specialization: "Strength & Conditioning",
+          rating: 4.9,
+          status: "Active",
+          clients: 20
+        },
+        {
+          id: 2,
+          name: "Mike Johnson",
+          email: "mike@example.com",
+          phone: "+1 (555) 234-5678",
+          joinDate: "2022-02-10",
+          specialization: "Cardio & HIIT",
+          rating: 4.7,
+          status: "Active",
+          clients: 15
+        },
+        {
+          id: 3,
+          name: "Emma Wilson",
+          email: "emma@example.com",
+          phone: "+1 (555) 345-6789",
+          joinDate: "2023-01-20",
+          specialization: "Yoga & Pilates",
+          rating: 4.8,
+          status: "Active",
+          clients: 18
+        },
+        {
+          id: 4,
+          name: "Alex Rodriguez",
+          email: "alex@example.com",
+          phone: "+1 (555) 456-7890",
+          joinDate: "2022-08-03",
+          specialization: "Weight Training",
+          rating: 4.6,
+          status: "Active",
+          clients: 12
+        },
+        {
+          id: 5,
+          name: "John Smith",
+          email: "john@example.com",
+          phone: "+1 (555) 567-8901",
+          joinDate: "2022-11-15",
+          specialization: "Cycling & Cardio",
+          rating: 4.5,
+          status: "On Leave",
+          clients: 10
+        }
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   const filteredTrainers = trainers.filter(trainer => {
     if (!searchQuery) return true;
@@ -107,19 +165,57 @@ export default function Trainers() {
     );
   });
   
-  const handleAddTrainer = (e: React.FormEvent) => {
+  const handleAddFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setAddFormData(prev => ({
+      ...prev,
+      [id]: value
+    }));
+  };
+  
+  const handleAddTrainer = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, this would send data to the API
-    toast.success("Trainer added successfully!");
-    setShowAddDialog(false);
+    try {
+      // In a real app, we'd send this to the API
+      const newTrainer = {
+        id: trainers.length + 1,
+        name: addFormData.name,
+        email: addFormData.email,
+        phone: addFormData.phone,
+        joinDate: new Date().toISOString().split('T')[0],
+        specialization: addFormData.specialization,
+        rating: parseFloat(addFormData.rating),
+        status: addFormData.status,
+        clients: 0
+      };
+      
+      // Add to our local state
+      setTrainers(prev => [...prev, newTrainer]);
+      
+      // Reset form
+      setAddFormData({
+        name: "",
+        email: "",
+        phone: "",
+        specialization: "",
+        status: "Active",
+        rating: "4.5"
+      });
+      
+      toast.success("Trainer added successfully!");
+      setShowAddDialog(false);
+    } catch (error) {
+      console.error("Error adding trainer:", error);
+      toast.error("Failed to add trainer");
+    }
   };
 
-  const handleViewTrainer = (trainer: any) => {
+  const handleViewTrainer = (trainer: Trainer) => {
     setSelectedTrainer(trainer);
     setShowViewDialog(true);
   };
 
-  const handleEditClick = (trainer: any) => {
+  const handleEditClick = (trainer: Trainer) => {
     setSelectedTrainer(trainer);
     setEditFormData({
       name: trainer.name,
@@ -132,22 +228,9 @@ export default function Trainers() {
     setShowEditDialog(true);
   };
 
-  const handleDeleteClick = (trainer: any) => {
+  const handleDeleteClick = (trainer: Trainer) => {
     setSelectedTrainer(trainer);
     setShowDeleteDialog(true);
-  };
-
-  const handleEditSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // In a real app, this would send data to the API
-    toast.success(`Trainer ${selectedTrainer.name} updated successfully!`);
-    setShowEditDialog(false);
-  };
-
-  const handleDeleteConfirm = () => {
-    // In a real app, this would send delete request to the API
-    toast.success(`Trainer ${selectedTrainer.name} deleted successfully!`);
-    setShowDeleteDialog(false);
   };
 
   const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -156,6 +239,50 @@ export default function Trainers() {
       ...prev,
       [id]: value
     }));
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedTrainer) return;
+    
+    try {
+      // Update the trainer in our local state
+      const updatedTrainers = trainers.map(trainer => {
+        if (trainer.id === selectedTrainer.id) {
+          return {
+            ...trainer,
+            name: editFormData.name,
+            email: editFormData.email,
+            phone: editFormData.phone,
+            specialization: editFormData.specialization,
+            status: editFormData.status,
+            rating: parseFloat(editFormData.rating)
+          };
+        }
+        return trainer;
+      });
+      
+      setTrainers(updatedTrainers);
+      toast.success(`Trainer ${selectedTrainer.name} updated successfully!`);
+      setShowEditDialog(false);
+    } catch (error) {
+      console.error("Error updating trainer:", error);
+      toast.error("Failed to update trainer");
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedTrainer) return;
+    
+    try {
+      // Remove the trainer from our local state
+      setTrainers(prev => prev.filter(trainer => trainer.id !== selectedTrainer.id));
+      toast.success(`Trainer ${selectedTrainer.name} deleted successfully!`);
+      setShowDeleteDialog(false);
+    } catch (error) {
+      console.error("Error deleting trainer:", error);
+      toast.error("Failed to delete trainer");
+    }
   };
 
   const handleExportData = () => {
@@ -175,6 +302,16 @@ export default function Trainers() {
         return "bg-gray-100 text-gray-800";
     }
   };
+
+  if (isLoading) {
+    return (
+      <AnimatedLayout>
+        <div className="flex justify-center py-12">
+          <p className="text-muted-foreground">Loading trainers...</p>
+        </div>
+      </AnimatedLayout>
+    );
+  }
 
   return (
     <AnimatedLayout>
@@ -213,28 +350,65 @@ export default function Trainers() {
                   <div className="grid gap-4 py-4">
                     <div className="grid gap-2">
                       <Label htmlFor="name">Full Name</Label>
-                      <Input id="name" placeholder="John Doe" required />
+                      <Input 
+                        id="name" 
+                        placeholder="John Doe" 
+                        value={addFormData.name}
+                        onChange={handleAddFormChange}
+                        required 
+                      />
                     </div>
                     <div className="grid gap-2">
                       <Label htmlFor="email">Email</Label>
-                      <Input id="email" type="email" placeholder="john@example.com" required />
+                      <Input 
+                        id="email" 
+                        type="email" 
+                        placeholder="john@example.com" 
+                        value={addFormData.email}
+                        onChange={handleAddFormChange}
+                        required 
+                      />
                     </div>
                     <div className="grid gap-2">
                       <Label htmlFor="phone">Phone Number</Label>
-                      <Input id="phone" placeholder="+1 (555) 123-4567" />
+                      <Input 
+                        id="phone" 
+                        placeholder="+1 (555) 123-4567" 
+                        value={addFormData.phone}
+                        onChange={handleAddFormChange}
+                      />
                     </div>
                     <div className="grid gap-2">
                       <Label htmlFor="specialization">Specialization</Label>
-                      <Input id="specialization" placeholder="Strength & Conditioning" />
+                      <Input 
+                        id="specialization" 
+                        placeholder="Strength & Conditioning" 
+                        value={addFormData.specialization}
+                        onChange={handleAddFormChange}
+                      />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="grid gap-2">
                         <Label htmlFor="status">Status</Label>
-                        <Input id="status" placeholder="Active" />
+                        <Input 
+                          id="status" 
+                          placeholder="Active" 
+                          value={addFormData.status}
+                          onChange={handleAddFormChange}
+                        />
                       </div>
                       <div className="grid gap-2">
                         <Label htmlFor="rating">Rating</Label>
-                        <Input id="rating" type="number" step="0.1" min="1" max="5" placeholder="4.5" />
+                        <Input 
+                          id="rating" 
+                          type="number" 
+                          step="0.1" 
+                          min="1" 
+                          max="5" 
+                          placeholder="4.5" 
+                          value={addFormData.rating}
+                          onChange={handleAddFormChange}
+                        />
                       </div>
                     </div>
                   </div>
@@ -494,4 +668,3 @@ export default function Trainers() {
     </AnimatedLayout>
   );
 }
-
