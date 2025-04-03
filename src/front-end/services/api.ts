@@ -1,7 +1,7 @@
 
 /**
  * API service for the frontend that bridges to the backend implementation
- * This allows us to switch between mock data and a real Express API
+ * This allows us to switch between mock data and a real Laravel API
  * without changing any frontend code
  */
 

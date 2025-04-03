@@ -1,3 +1,4 @@
+
 # Laravel Backend Setup Guide for GymPro
 
 This guide explains how to set up your Laravel backend to work with the GymPro React frontend.
