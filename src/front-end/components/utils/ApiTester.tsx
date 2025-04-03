@@ -1,9 +1,9 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { API_BASE_URL, USE_MOCK_DATA } from "@/back-end/config/api";
 import axios from 'axios';
 import { toast } from "sonner";
@@ -54,7 +54,7 @@ const ApiTester = () => {
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="flex justify-between items-center">
-          <span>Laravel API Tester</span>
+          <span>API Tester</span>
           <div className="flex items-center space-x-2 text-sm font-normal">
             <span>Using mock data:</span>
             <code className={USE_MOCK_DATA ? "text-yellow-500" : "text-green-500"}>
