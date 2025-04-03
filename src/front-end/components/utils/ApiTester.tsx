@@ -1,136 +1,209 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState } from "react";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { API_BASE_URL, USE_MOCK_DATA } from "@/back-end/config/api";
-import axios from 'axios';
-import { toast } from "sonner";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2 } from "lucide-react";
+import { API_BASE_URL } from "@/back-end/config/api";
+import axios from "axios";
 
+/**
+ * ApiTester component allows users to test API endpoints directly from the frontend
+ * It supports GET, POST, PUT, PATCH, and DELETE HTTP methods
+ */
 const ApiTester = () => {
-  const [endpoint, setEndpoint] = useState('/login');
-  const [method, setMethod] = useState('GET');
-  const [requestBody, setRequestBody] = useState('{\n  "email": "email@example.com",\n  "password": "password"\n}');
-  const [response, setResponse] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [authToken, setAuthToken] = useState('');
+  const [method, setMethod] = useState<string>("GET");
+  const [endpoint, setEndpoint] = useState<string>("/user");
+  const [requestBody, setRequestBody] = useState<string>("");
+  const [authToken, setAuthToken] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [response, setResponse] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
+  /**
+   * Handles the API test request based on user inputs
+   */
   const handleTest = async () => {
+    setLoading(true);
+    setResponse(null);
+    setError(null);
+
     try {
-      setLoading(true);
-      setResponse('');
-      
-      const options = {
-        method,
-        url: `${API_BASE_URL}${endpoint}`,
-        headers: {
-          'Content-Type': 'application/json',
-          ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
-        },
-        data: method !== 'GET' ? JSON.parse(requestBody) : undefined
+      // Prepare headers with authorization if token is provided
+      const headers: Record<string, string> = {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
       };
+
+      if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+      }
+
+      // Prepare request URL
+      const url = `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
       
-      const result = await axios(options);
+      // Parse JSON body if provided for non-GET requests
+      let parsedBody = undefined;
+      if (method !== 'GET' && requestBody) {
+        try {
+          parsedBody = JSON.parse(requestBody);
+        } catch (e) {
+          setError("Invalid JSON in request body");
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Make the API request using axios
+      const response = await axios({
+        method: method.toLowerCase(),
+        url,
+        headers,
+        data: parsedBody,
+      });
+
+      // Set the response data
+      setResponse({
+        status: response.status,
+        statusText: response.statusText,
+        data: response.data,
+        headers: response.headers,
+      });
+    } catch (error) {
+      console.error("API Test Error:", error);
       
-      setResponse(JSON.stringify(result.data, null, 2));
-      toast.success('API request successful');
-    } catch (error: any) {
-      console.error('API test error:', error);
-      setResponse(
-        JSON.stringify({
-          error: error.message,
-          response: error.response?.data || 'No response data',
-          status: error.response?.status || 'Unknown status'
-        }, null, 2)
-      );
-      toast.error(`API Error: ${error.message}`);
+      if (axios.isAxiosError(error)) {
+        setError(
+          `Error: ${error.response?.status || ''} ${error.response?.statusText || ''}\n` +
+          `${JSON.stringify(error.response?.data || error.message, null, 2)}`
+        );
+      } else {
+        setError(`Error: ${(error as Error).message}`);
+      }
     } finally {
       setLoading(false);
     }
   };
 
+  /**
+   * Format JSON for display
+   */
+  const formatJson = (data: any) => {
+    return JSON.stringify(data, null, 2);
+  };
+
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex justify-between items-center">
-          <span>API Tester</span>
-          <div className="flex items-center space-x-2 text-sm font-normal">
-            <span>Using mock data:</span>
-            <code className={USE_MOCK_DATA ? "text-yellow-500" : "text-green-500"}>
-              {USE_MOCK_DATA ? "Yes" : "No"}
-            </code>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>API Endpoint Testing</CardTitle>
+          <CardDescription>
+            Test your API endpoints with different HTTP methods
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label className="text-sm font-medium">Method</label>
+              <Select 
+                value={method}
+                onValueChange={setMethod}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select method" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="GET">GET</SelectItem>
+                  <SelectItem value="POST">POST</SelectItem>
+                  <SelectItem value="PUT">PUT</SelectItem>
+                  <SelectItem value="PATCH">PATCH</SelectItem>
+                  <SelectItem value="DELETE">DELETE</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="md:col-span-3">
+              <label className="text-sm font-medium">Endpoint</label>
+              <div className="flex">
+                <div className="bg-muted text-muted-foreground px-3 py-2 text-sm border rounded-l-md border-r-0">
+                  {API_BASE_URL}
+                </div>
+                <Input
+                  type="text"
+                  value={endpoint}
+                  onChange={(e) => setEndpoint(e.target.value)}
+                  placeholder="/user"
+                  className="rounded-l-none"
+                />
+              </div>
+            </div>
           </div>
-        </CardTitle>
-        <div className="text-sm text-muted-foreground">
-          Base URL: <code className="bg-muted px-1 rounded">{API_BASE_URL}</code>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="md:col-span-1">
-            <Label htmlFor="method">Method</Label>
-            <select
-              id="method"
-              value={method}
-              onChange={(e) => setMethod(e.target.value)}
-              className="w-full p-2 border rounded bg-background"
-            >
-              <option value="GET">GET</option>
-              <option value="POST">POST</option>
-              <option value="PUT">PUT</option>
-              <option value="PATCH">PATCH</option>
-              <option value="DELETE">DELETE</option>
-            </select>
-          </div>
-          <div className="md:col-span-3">
-            <Label htmlFor="endpoint">Endpoint</Label>
+          
+          <div>
+            <label className="text-sm font-medium">Authentication Token (optional)</label>
             <Input
-              id="endpoint"
-              value={endpoint}
-              onChange={(e) => setEndpoint(e.target.value)}
-              placeholder="/api/endpoint"
+              type="text"
+              value={authToken}
+              onChange={(e) => setAuthToken(e.target.value)}
+              placeholder="Bearer token"
             />
           </div>
-        </div>
-        
-        <div>
-          <Label htmlFor="token">Authorization Token (optional)</Label>
-          <Input
-            id="token"
-            value={authToken}
-            onChange={(e) => setAuthToken(e.target.value)}
-            placeholder="Bearer token"
-          />
-        </div>
-        
-        {method !== 'GET' && (
-          <div>
-            <Label htmlFor="body">Request Body (JSON)</Label>
-            <textarea
-              id="body"
-              value={requestBody}
-              onChange={(e) => setRequestBody(e.target.value)}
-              className="w-full h-32 p-2 border rounded font-mono text-sm bg-background"
-              placeholder="{}"
-            />
-          </div>
-        )}
-        
-        <Button onClick={handleTest} disabled={loading} className="w-full">
-          {loading ? 'Sending request...' : 'Test API Endpoint'}
-        </Button>
-        
-        {response && (
-          <div>
-            <Label>Response:</Label>
-            <pre className="bg-black text-green-400 p-4 rounded-md overflow-auto max-h-96 text-sm">
-              {response}
+          
+          {method !== "GET" && (
+            <div>
+              <label className="text-sm font-medium">Request Body (JSON)</label>
+              <Textarea
+                value={requestBody}
+                onChange={(e) => setRequestBody(e.target.value)}
+                placeholder='{"key": "value"}'
+                className="font-mono text-sm h-32"
+              />
+            </div>
+          )}
+        </CardContent>
+        <CardFooter>
+          <Button onClick={handleTest} disabled={loading} className="w-full">
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Testing...
+              </>
+            ) : (
+              "Test Endpoint"
+            )}
+          </Button>
+        </CardFooter>
+      </Card>
+      
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>
+            <pre className="whitespace-pre-wrap font-mono text-xs overflow-auto">
+              {error}
             </pre>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {response && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Response</CardTitle>
+            <CardDescription>
+              Status: {response.status} {response.statusText}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <pre className="bg-muted p-4 rounded-md overflow-auto max-h-96 font-mono text-xs">
+              {formatJson(response.data)}
+            </pre>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 };
 

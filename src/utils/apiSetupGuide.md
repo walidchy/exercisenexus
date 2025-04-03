@@ -129,4 +129,4 @@ const authMiddleware = (req, res, next) => {
 npm run start
 ```
 
-The server will typically run on http://localhost:3000 by default.
+The server will typically run on http://localhost:8000 by default.

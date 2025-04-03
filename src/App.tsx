@@ -41,7 +41,10 @@ import ApiTest from "./pages/admin/ApiTest";
 // AppLayout
 import { AppLayout } from "./components/layout/AppLayout";
 
-// Create a new query client instance
+/**
+ * Create a new query client instance with default options
+ * This client is used for managing API data fetching and caching
+ */
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -51,6 +54,10 @@ const queryClient = new QueryClient({
   },
 });
 
+/**
+ * Main App component
+ * Sets up the application's providers and routing structure
+ */
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>

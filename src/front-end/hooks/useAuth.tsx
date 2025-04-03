@@ -1,13 +1,17 @@
+
 import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { api } from "../services/api";
 import axios from "axios";
-import { API_BASE_URL, getHeaders } from "../../back-end/config/api";
+import { API_BASE_URL } from "../../back-end/config/api";
 
 // Define user types based on roles
 type UserRole = "member" | "trainer" | "admin";
 
+/**
+ * User interface defining the structure of user data
+ */
 interface User {
   id: number;
   name: string;
@@ -18,6 +22,9 @@ interface User {
   token?: string;
 }
 
+/**
+ * AuthContext interface defines all methods and properties available through the context
+ */
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
@@ -40,7 +47,10 @@ const AuthContext = createContext<AuthContextType>({
 // Flag to use mock data when backend is not available
 const USE_MOCK_DATA = true; // Set to false when your backend is ready
 
-// Mock user data for development
+/**
+ * Mock users for development purposes
+ * This allows testing without a backend
+ */
 const MOCK_USERS = {
   "member@example.com": {
     id: 1,
@@ -76,12 +86,19 @@ const MOCK_USERS = {
   }
 };
 
+/**
+ * AuthProvider component provides authentication context to the application
+ * It handles user authentication, session management, and redirects
+ */
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const navigate = useNavigate();
 
-  // Check for existing session on mount
+  /**
+   * Check for existing session on mount
+   * This loads the user from localStorage if available
+   */
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -125,7 +142,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     checkAuth();
   }, []);
 
-  // Login function
+  /**
+   * Login function authenticates a user and stores their session
+   * @param email User's email address
+   * @param password User's password
+   */
   const login = async (email: string, password: string) => {
     if (!email || !password) {
       toast.error("Email and password are required");
@@ -212,7 +233,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // User verification function (for admin)
+  /**
+   * User verification function (for admin)
+   * Approves a pending user registration
+   * @param userId ID of the user to verify
+   */
   const verifyUser = async (userId: number) => {
     try {
       if (USE_MOCK_DATA) {
@@ -236,7 +261,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // User rejection function (for admin)
+  /**
+   * User rejection function (for admin)
+   * Rejects a pending user registration
+   * @param userId ID of the user to reject
+   */
   const rejectUser = async (userId: number) => {
     try {
       if (USE_MOCK_DATA) {
@@ -260,7 +289,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Logout function
+  /**
+   * Logout function
+   * Clears the user session and redirects to login
+   */
   const logout = () => {
     if (!USE_MOCK_DATA && user?.token) {
       // Call API to invalidate token
@@ -285,9 +317,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
+/**
+ * useAuth hook provides access to the auth context
+ * @returns Auth context values and methods
+ */
 export const useAuth = () => useContext(AuthContext);
 
-// Route guard hook
+/**
+ * Route guard hook to protect routes based on user role
+ * @param allowedRoles Optional array of roles that can access the route
+ * @returns User and loading state
+ */
 export const useRequireAuth = (allowedRoles?: UserRole[]) => {
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
