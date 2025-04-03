@@ -1,4 +1,10 @@
 
+/**
+ * API service for the frontend that bridges to the backend implementation
+ * This allows us to switch between mock data and a real Express API
+ * without changing any frontend code
+ */
+
 import { api as backendApi } from "../../back-end/services/api";
 
 /**
@@ -7,9 +13,3 @@ import { api as backendApi } from "../../back-end/services/api";
  * while maintaining a clear separation of concerns
  */
 export const api = backendApi;
-
-/**
- * This file serves as a bridge between the frontend and backend
- * It allows us to change the backend implementation without affecting the frontend
- * For example, we could switch from mock data to a real API without changing any frontend code
- */

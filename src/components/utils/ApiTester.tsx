@@ -4,11 +4,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { API_BASE_URL, USE_MOCK_DATA } from "@/config/api";
 import axios from 'axios';
 import { toast } from "sonner";
 
+/**
+ * ApiTester component - A utility for testing API endpoints
+ * 
+ * Allows testing various HTTP methods against backend endpoints
+ * with optional authentication tokens and request bodies
+ */
 const ApiTester = () => {
   const [endpoint, setEndpoint] = useState('/login');
   const [method, setMethod] = useState('GET');
@@ -17,6 +22,10 @@ const ApiTester = () => {
   const [loading, setLoading] = useState(false);
   const [authToken, setAuthToken] = useState('');
 
+  /**
+   * Handle API test request
+   * Makes the actual API call with the configured settings
+   */
   const handleTest = async () => {
     try {
       setLoading(true);
@@ -55,7 +64,7 @@ const ApiTester = () => {
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="flex justify-between items-center">
-          <span>Laravel API Tester</span>
+          <span>Express API Tester</span>
           <div className="flex items-center space-x-2 text-sm font-normal">
             <span>Using mock data:</span>
             <code className={USE_MOCK_DATA ? "text-yellow-500" : "text-green-500"}>
@@ -68,6 +77,7 @@ const ApiTester = () => {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Method and Endpoint selectors */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="md:col-span-1">
             <Label htmlFor="method">Method</Label>
@@ -95,6 +105,7 @@ const ApiTester = () => {
           </div>
         </div>
         
+        {/* Auth Token input */}
         <div>
           <Label htmlFor="token">Authorization Token (optional)</Label>
           <Input
@@ -105,6 +116,7 @@ const ApiTester = () => {
           />
         </div>
         
+        {/* Request Body (for non-GET requests) */}
         {method !== 'GET' && (
           <div>
             <Label htmlFor="body">Request Body (JSON)</Label>
@@ -118,10 +130,12 @@ const ApiTester = () => {
           </div>
         )}
         
+        {/* Submit button */}
         <Button onClick={handleTest} disabled={loading} className="w-full">
           {loading ? 'Sending request...' : 'Test API Endpoint'}
         </Button>
         
+        {/* Response display */}
         {response && (
           <div>
             <Label>Response:</Label>
