@@ -1,7 +1,8 @@
+
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, MoreHorizontal, Pencil, Trash } from "lucide-react";
 import AnimatedLayout from "@/components/ui/AnimatedLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -60,7 +61,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { DotsHorizontalIcon, PencilIcon, TrashIcon } from "@radix-ui/react-icons";
 import { trainerService, Trainer } from "@/back-end/services/trainerService";
 import { useAuth } from "@/front-end/hooks/useAuth";
 
@@ -169,7 +169,7 @@ const Trainers = () => {
       phone: "",
       specialization: "",
       rating: 0,
-      status: "Active",
+      status: "Active" as const,
     },
   });
 
@@ -182,7 +182,7 @@ const Trainers = () => {
       phone: selectedTrainer?.phone || "",
       specialization: selectedTrainer?.specialization || "",
       rating: selectedTrainer?.rating || 0,
-      status: selectedTrainer?.status || "Active",
+      status: (selectedTrainer?.status as "Active" | "Inactive" | "Suspended") || "Active",
     },
     values: {
       name: selectedTrainer?.name || "",
@@ -190,7 +190,7 @@ const Trainers = () => {
       phone: selectedTrainer?.phone || "",
       specialization: selectedTrainer?.specialization || "",
       rating: selectedTrainer?.rating || 0,
-      status: selectedTrainer?.status || "Active",
+      status: (selectedTrainer?.status as "Active" | "Inactive" | "Suspended") || "Active",
     },
     mode: "onChange",
   });
@@ -203,7 +203,7 @@ const Trainers = () => {
         phone: selectedTrainer.phone,
         specialization: selectedTrainer.specialization,
         rating: selectedTrainer.rating,
-        status: selectedTrainer.status,
+        status: selectedTrainer.status as "Active" | "Inactive" | "Suspended",
       });
     }
   }, [selectedTrainer, editTrainerForm]);
@@ -214,7 +214,7 @@ const Trainers = () => {
 
   const handleUpdateTrainer = (values: TrainerFormValues) => {
     if (selectedTrainer) {
-      updateTrainerMutation.mutate({ id: selectedTrainer.id, ...values, rating: Number(values.rating) });
+      updateTrainerMutation.mutate({ id: selectedTrainer.id, ...values });
     }
   };
 
@@ -237,7 +237,7 @@ const Trainers = () => {
               Manage your gym's trainers and their profiles.
             </p>
           </div>
-          <Dialog>
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="default">
                 <PlusCircle className="mr-2 h-4 w-4" />
@@ -384,7 +384,10 @@ const Trainers = () => {
                       <TableCell>{trainer.specialization}</TableCell>
                       <TableCell>{trainer.rating}</TableCell>
                       <TableCell>
-                        <Badge variant={trainer.status === "Active" ? "success" : trainer.status === "Inactive" ? "secondary" : "destructive"}>
+                        <Badge variant={
+                          trainer.status === "Active" ? "default" : 
+                          trainer.status === "Inactive" ? "secondary" : "destructive"
+                        }>
                           {trainer.status}
                         </Badge>
                       </TableCell>
@@ -393,7 +396,7 @@ const Trainers = () => {
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" className="h-8 w-8 p-0">
                               <span className="sr-only">Open menu</span>
-                              <DotsHorizontalIcon className="h-4 w-4" />
+                              <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
@@ -402,13 +405,13 @@ const Trainers = () => {
                               setSelectedTrainer(trainer);
                               setIsEditDialogOpen(true);
                             }}>
-                              <PencilIcon className="mr-2 h-4 w-4" /> Edit
+                              <Pencil className="mr-2 h-4 w-4" /> Edit
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => {
                               setSelectedTrainer(trainer);
                               setIsDeleteDialogOpen(true);
                             }}>
-                              <TrashIcon className="mr-2 h-4 w-4" /> Delete
+                              <Trash className="mr-2 h-4 w-4" /> Delete
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
