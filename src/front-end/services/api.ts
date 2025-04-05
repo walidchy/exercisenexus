@@ -13,3 +13,6 @@ import { api as backendApi } from "../../back-end/services/api";
  * while maintaining a clear separation of concerns
  */
 export const api = backendApi;
+
+// Also export the trainer service types from the back-end
+export { Trainer, CreateTrainerData } from "../../back-end/services/trainerService";

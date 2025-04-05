@@ -13,6 +13,16 @@ export interface Trainer {
   clients: number;
 }
 
+// Define a type for creating trainers that makes all fields required except those handled by the service
+export type CreateTrainerData = {
+  name: string;
+  email: string;
+  phone: string;
+  specialization: string;
+  rating: number;
+  status: string;
+};
+
 export const trainerService = {
   getTrainers: async (token: string): Promise<Trainer[]> => {
     try {
@@ -35,7 +45,7 @@ export const trainerService = {
     }
   },
 
-  addTrainer: async (token: string, trainerData: Omit<Trainer, "id" | "joinDate" | "clients">): Promise<Trainer> => {
+  addTrainer: async (token: string, trainerData: CreateTrainerData): Promise<Trainer> => {
     try {
       // In a real app, we would call the API to create a trainer
       // For now, we'll just return a mock trainer with the data
