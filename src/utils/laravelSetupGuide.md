@@ -1,4 +1,3 @@
-
 # Laravel Backend Setup Guide for GymPro
 
 This guide explains how to set up your Laravel backend to work with the GymPro React frontend.
@@ -32,7 +31,7 @@ return [
 
 ## 3. Set Up Authentication Routes in Laravel
 
-In your `routes/api.php` file:
+Use the following routes in your `routes/api.php` file:
 
 ```php
 <?php
@@ -40,145 +39,125 @@ In your `routes/api.php` file:
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\MembershipController;
-use App\Http\Controllers\UserController;
+use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\EquipmentController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\SettingController;
 
 // Public routes
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 
-// Protected routes
+// Protected routes - requires authentication
 Route::middleware('auth:sanctum')->group(function () {
-    // User
-    Route::get('/user', [AuthController::class, 'user']);
+    // Auth
+    Route::get('/user', function (Request $request) {
+        return response()->json([
+            'data' => $request->user()->load(['member', 'trainer']),
+            'message' => 'User retrieved successfully'
+        ]);
+    });
     Route::post('/logout', [AuthController::class, 'logout']);
+    
+    // Members
+    Route::get('/members', [MemberController::class, 'index']);
+    Route::post('/members', [MemberController::class, 'store']);
+    Route::get('/members/{member}', [MemberController::class, 'show']);
+    Route::put('/members/{member}', [MemberController::class, 'update']);
+    Route::delete('/members/{member}', [MemberController::class, 'destroy']);
+
+    // Trainers Routes
+    Route::get('/trainers', [TrainerController::class, 'index']);
+    Route::post('/trainers', [TrainerController::class, 'store']);
+    Route::get('/trainers/{trainer}', [TrainerController::class, 'show']);
+    Route::put('/trainers/{trainer}', [TrainerController::class, 'update']);
+    Route::delete('/trainers/{trainer}', [TrainerController::class, 'destroy']);
     
     // Activities
     Route::get('/activities', [ActivityController::class, 'index']);
-    Route::post('/activities', [ActivityController::class, 'store']);
     Route::get('/activities/{activity}', [ActivityController::class, 'show']);
-    Route::put('/activities/{activity}', [ActivityController::class, 'update']);
-    Route::delete('/activities/{activity}', [ActivityController::class, 'destroy']);
+    Route::post('/activities/{activity}/schedules', [ActivityController::class, 'addSchedule']);
+    Route::put('/activities/{activity}/schedules/{schedule}', [ActivityController::class, 'updateSchedule']);
+    Route::delete('/activities/{activity}/schedules/{schedule}', [ActivityController::class, 'removeSchedule']);
     
     // Bookings
     Route::get('/bookings', [BookingController::class, 'index']);
     Route::post('/bookings', [BookingController::class, 'store']);
     Route::get('/bookings/{booking}', [BookingController::class, 'show']);
     Route::patch('/bookings/{booking}/cancel', [BookingController::class, 'cancel']);
+    Route::patch('/bookings/{booking}/complete', [BookingController::class, 'complete']);
     
     // Memberships
-    Route::get('/membership-plans', [MembershipController::class, 'getPlans']);
-    Route::get('/my-membership', [MembershipController::class, 'getUserMembership']);
+    Route::get('/membership-plans', [MembershipController::class, 'index']);
+    Route::get('/membership-plans/{plan}', [MembershipController::class, 'show']);
+    Route::get('/my-membership', [MembershipController::class, 'getMembership']);
     Route::post('/subscribe', [MembershipController::class, 'subscribe']);
     
+    // Attendance
+    Route::post('/bookings/{booking}/attendance', [AttendanceController::class, 'store']);
+    Route::patch('/bookings/{booking}/attendance', [AttendanceController::class, 'update']);
+    
+    // Notifications
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markAsRead']);
+    
+    // Equipment (For all authenticated users to view)
+    Route::get('/equipment', [EquipmentController::class, 'index']);
+    
+    // Profile updates
+    Route::put('/profile', [UserController::class, 'updateProfile']);
+    
+    // Trainer routes
+    Route::middleware('role:trainer,admin')->group(function () {
+        // Trainer availability
+        Route::get('/trainer/availability', [UserController::class, 'getAvailability']);
+        Route::post('/trainer/availability', [UserController::class, 'updateAvailability']);
+        
+        // Manage activities (create, update, delete)
+        Route::post('/activities', [ActivityController::class, 'store']);
+        Route::put('/activities/{activity}', [ActivityController::class, 'update']);
+        Route::delete('/activities/{activity}', [ActivityController::class, 'destroy']);
+    });
+    
     // Admin routes
-    Route::middleware('admin')->group(function () {
+    Route::middleware('role:admin')->group(function () {
+        // User management
         Route::get('/users', [UserController::class, 'index']);
-        Route::patch('/users/{user}/verify', [UserController::class, 'verify']);
+        Route::post('/users', [UserController::class, 'store']);
+        Route::get('/users/{user}', [UserController::class, 'show']);
+        Route::put('/users/{user}', [UserController::class, 'update']);
+        Route::delete('/users/{user}', [UserController::class, 'destroy']);
+        Route::patch('/users/{user}/verify', [AuthController::class, 'verifyUser']);
+        
+        // Membership plans management
+        Route::post('/membership-plans', [MembershipController::class, 'store']);
+        Route::put('/membership-plans/{plan}', [MembershipController::class, 'update']);
+        Route::delete('/membership-plans/{plan}', [MembershipController::class, 'destroy']);
+        
+        // Equipment management
+        Route::post('/equipment', [EquipmentController::class, 'store']);
+        Route::put('/equipment/{equipment}', [EquipmentController::class, 'update']);
+        Route::delete('/equipment/{equipment}', [EquipmentController::class, 'destroy']);
+        
+        // Settings
+        Route::get('/settings', [SettingController::class, 'index']);
+        Route::put('/settings/{key}', [SettingController::class, 'update']);
+        
+        // Payment management
+        Route::get('/payments', [PaymentController::class, 'index']);
+        Route::get('/payments/{payment}', [PaymentController::class, 'show']);
     });
 });
 ```
 
-## 4. Example Auth Controller
+## 4. Register Custom Role Middleware
 
-Create `app/Http/Controllers/AuthController.php`:
-
-```php
-<?php
-
-namespace App\Http\Controllers;
-
-use App\Models\User;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
-
-class AuthController extends Controller
-{
-    public function register(Request $request)
-    {
-        $request->validate([
-            'full_name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
-            'role' => 'required|in:member,trainer,admin',
-        ]);
-
-        $user = User::create([
-            'name' => $request->full_name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => $request->role,
-            'is_verified' => false, // Requires admin verification
-        ]);
-
-        return response()->json([
-            'message' => 'User registered successfully. Awaiting account verification.',
-        ], 201);
-    }
-
-    public function login(Request $request)
-    {
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
-        ]);
-
-        $user = User::where('email', $request->email)->first();
-
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            throw ValidationException::withMessages([
-                'email' => ['The provided credentials are incorrect.'],
-            ]);
-        }
-
-        // Clear previous tokens if you want only one active token per user
-        // $user->tokens()->delete();
-        
-        $token = $user->createToken('auth-token')->plainTextToken;
-
-        return response()->json([
-            'token' => $token,
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'role' => $user->role,
-                'avatar' => $user->avatar,
-                'is_verified' => $user->is_verified,
-            ]
-        ]);
-    }
-
-    public function user(Request $request)
-    {
-        return response()->json([
-            'id' => $request->user()->id,
-            'name' => $request->user()->name,
-            'email' => $request->user()->email,
-            'role' => $request->user()->role,
-            'avatar' => $request->user()->avatar,
-            'is_verified' => $request->user()->is_verified,
-        ]);
-    }
-
-    public function logout(Request $request)
-    {
-        $request->user()->currentAccessToken()->delete();
-
-        return response()->json([
-            'message' => 'User logged out successfully',
-        ]);
-    }
-}
-```
-
-## 5. Admin Middleware
-
-Create `app/Http/Middleware/EnsureUserIsAdmin.php`:
+Create the role middleware in `app/Http/Middleware/CheckRole.php`:
 
 ```php
 <?php
@@ -187,35 +166,125 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
 
-class EnsureUserIsAdmin
+class CheckRole
 {
-    public function handle(Request $request, Closure $next): Response
+    /**
+     * Handle an incoming request.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Closure  $next
+     * @param  string  ...$roles
+     * @return mixed
+     */
+    public function handle(Request $request, Closure $next, ...$roles)
     {
-        if ($request->user() && $request->user()->role === 'admin') {
-            return $next($request);
+        if (!$request->user() || !in_array($request->user()->role, $roles)) {
+            return response()->json([
+                'message' => 'Unauthorized. You need '.implode(' or ', $roles).' role to access this resource.'
+            ], 403);
         }
         
-        return response()->json(['message' => 'Unauthorized. Admin access required.'], 403);
+        return $next($request);
     }
 }
 ```
 
-Register it in `app/Http/Kernel.php`:
+Then register it in `app/Http/Kernel.php`:
 
 ```php
 protected $routeMiddleware = [
-    // ...
-    'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
+    // ... other middleware
+    'role' => \App\Http\Middleware\CheckRole::class,
 ];
+```
+
+## 5. Create API Response Format
+
+For consistency, wrap your API responses in a standard format. Create a trait in `app/Traits/ApiResponses.php`:
+
+```php
+<?php
+
+namespace App\Traits;
+
+trait ApiResponses
+{
+    /**
+     * Success Response
+     *
+     * @param  mixed  $data
+     * @param  string  $message
+     * @param  int  $code
+     * @return \Illuminate\Http\JsonResponse
+     */
+    protected function successResponse($data, $message = null, $code = 200)
+    {
+        return response()->json([
+            'status' => 'success',
+            'message' => $message,
+            'data' => $data
+        ], $code);
+    }
+
+    /**
+     * Error Response
+     *
+     * @param  string  $message
+     * @param  int  $code
+     * @return \Illuminate\Http\JsonResponse
+     */
+    protected function errorResponse($message, $code)
+    {
+        return response()->json([
+            'status' => 'error',
+            'message' => $message,
+            'data' => null
+        ], $code);
+    }
+}
+```
+
+Use this trait in your controllers like this:
+
+```php
+use App\Traits\ApiResponses;
+
+class YourController extends Controller
+{
+    use ApiResponses;
+    
+    public function index()
+    {
+        return $this->successResponse($data, 'Data retrieved successfully');
+    }
+}
 ```
 
 ## 6. Running Your Laravel Backend
 
+Make sure to set the right environment variables in your `.env` file:
+
+```
+APP_URL=http://localhost:8000
+SANCTUM_STATEFUL_DOMAINS=localhost:3000
+SESSION_DOMAIN=localhost
+```
+
+Then start your Laravel server:
+
 ```bash
-# Start the development server
 php artisan serve
 ```
 
-The server will run on http://localhost:8000 by default.
+Your API will be available at http://localhost:8000/api.
+
+## 7. Integration with Frontend
+
+On your React frontend, set the API URL environment variable:
+
+```
+VITE_API_URL=http://localhost:8000/api
+```
+
+This will ensure your frontend connects to your Laravel backend properly.
