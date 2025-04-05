@@ -1,7 +1,7 @@
 
 # Backend API Setup Guide for GymPro
 
-This guide explains how to set up your Express backend API to work with the GymPro React frontend.
+This guide explains how to set up your backend API to work with the GymPro React frontend.
 
 ## 1. API Authentication
 
