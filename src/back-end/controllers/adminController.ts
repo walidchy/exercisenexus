@@ -1,3 +1,4 @@
+
 /**
  * Admin controller for back-end API
  * This controller handles all admin-related operations
@@ -94,7 +95,9 @@ export const adminController = {
    * @returns Promise resolving to array of admins
    */
   getAllAdmins: async (token: string): Promise<Admin[]> => {
-    const response = await mockApi.get("/api/admins", token);
+    const response = await mockApi.get("/api/admins", {
+      headers: { Authorization: `Bearer ${token}` }
+    });
     return response.data || sampleAdmins;
   },
 
@@ -106,7 +109,9 @@ export const adminController = {
    */
   getAdminById: async (token: string, id: number): Promise<Admin | null> => {
     try {
-      const response = await mockApi.get(`/api/admins/${id}`, token);
+      const response = await mockApi.get(`/api/admins/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       return response.data || sampleAdmins.find(admin => admin.id === id) || null;
     } catch (error) {
       console.error("Error fetching admin by ID:", error);
@@ -121,7 +126,9 @@ export const adminController = {
    * @returns Promise resolving to the created admin
    */
   createAdmin: async (token: string, adminData: CreateAdminData): Promise<Admin> => {
-    const response = await mockApi.post("/api/admins", adminData, token);
+    const response = await mockApi.post("/api/admins", adminData, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
     
     // If using mock data, construct an admin object
     if (!response.data) {
@@ -148,7 +155,9 @@ export const adminController = {
    */
   updateAdmin: async (token: string, id: number, adminData: Partial<CreateAdminData>): Promise<Admin | null> => {
     try {
-      const response = await mockApi.put(`/api/admins/${id}`, adminData, token);
+      const response = await mockApi.put(`/api/admins/${id}`, adminData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       
       // If using mock data, update the admin
       if (!response.data) {
@@ -179,7 +188,9 @@ export const adminController = {
    */
   deleteAdmin: async (token: string, id: number): Promise<boolean> => {
     try {
-      await mockApi.delete(`/api/admins/${id}`, token);
+      await mockApi.delete(`/api/admins/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       
       // If using mock data, remove the admin
       const index = sampleAdmins.findIndex(admin => admin.id === id);
@@ -202,7 +213,9 @@ export const adminController = {
    */
   verifyUser: async (token: string, userId: number): Promise<boolean> => {
     try {
-      await mockApi.patch(`/api/users/${userId}/verify`, {}, token);
+      await mockApi.patch(`/api/users/${userId}/verify`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       
       // If using mock data, remove from pending verifications
       const index = pendingVerifications.findIndex(user => user.id === userId);
@@ -223,7 +236,9 @@ export const adminController = {
    * @returns Promise resolving to array of unverified users
    */
   getPendingVerifications: async (token: string): Promise<any[]> => {
-    const response = await mockApi.get("/api/users/pending-verification", token);
+    const response = await mockApi.get("/api/users/pending-verification", {
+      headers: { Authorization: `Bearer ${token}` }
+    });
     return response.data || pendingVerifications;
   }
 };

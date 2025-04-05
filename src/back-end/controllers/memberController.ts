@@ -1,3 +1,4 @@
+
 /**
  * Member controller for back-end API
  * This controller handles all member-related operations
@@ -123,7 +124,9 @@ export const memberController = {
    * @returns Promise resolving to array of members
    */
   getAllMembers: async (token: string): Promise<Member[]> => {
-    const response = await mockApi.get("/api/members", token);
+    const response = await mockApi.get("/api/members", {
+      headers: { Authorization: `Bearer ${token}` }
+    });
     return response.data || sampleMembers;
   },
 
@@ -135,7 +138,9 @@ export const memberController = {
    */
   getMemberById: async (token: string, id: number): Promise<Member | null> => {
     try {
-      const response = await mockApi.get(`/api/members/${id}`, token);
+      const response = await mockApi.get(`/api/members/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       return response.data || sampleMembers.find(member => member.id === id) || null;
     } catch (error) {
       console.error("Error fetching member by ID:", error);
@@ -150,7 +155,9 @@ export const memberController = {
    * @returns Promise resolving to the created member
    */
   createMember: async (token: string, memberData: CreateMemberData): Promise<Member> => {
-    const response = await mockApi.post("/api/members", memberData, token);
+    const response = await mockApi.post("/api/members", memberData, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
     
     // If using mock data, construct a member object
     if (!response.data) {
@@ -178,7 +185,9 @@ export const memberController = {
    */
   updateMember: async (token: string, id: number, memberData: Partial<CreateMemberData>): Promise<Member | null> => {
     try {
-      const response = await mockApi.put(`/api/members/${id}`, memberData, token);
+      const response = await mockApi.put(`/api/members/${id}`, memberData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       
       // If using mock data, update the member
       if (!response.data) {
@@ -209,7 +218,9 @@ export const memberController = {
    */
   deleteMember: async (token: string, id: number): Promise<boolean> => {
     try {
-      await mockApi.delete(`/api/members/${id}`, token);
+      await mockApi.delete(`/api/members/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       
       // If using mock data, remove the member
       const index = sampleMembers.findIndex(member => member.id === id);

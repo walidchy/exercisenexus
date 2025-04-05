@@ -6,10 +6,9 @@
  */
 
 import { api as backendApi } from "../../back-end/services/api";
-import type { Trainer, CreateTrainerData } from "../../back-end/services/trainerService";
-import { memberService } from "./memberService";
-import { trainerService } from "./trainerService";
-import { adminService } from "./adminService";
+import { trainerController, Trainer, CreateTrainerData } from "../../back-end/controllers/trainerController";
+import { memberController } from "../../back-end/controllers/memberController";
+import { adminController } from "../../back-end/controllers/adminController";
 
 /**
  * Re-export the API service from the backend
@@ -18,14 +17,14 @@ import { adminService } from "./adminService";
  */
 export const api = {
   ...backendApi,
-  members: memberService,
-  trainers: trainerService,
-  admins: adminService
+  trainers: trainerController,
+  members: memberController,
+  admins: adminController
 };
 
-// Also export the trainer service types from the back-end
+// Export the trainer service types from the back-end
 export type { Trainer, CreateTrainerData };
 
 // Re-export types from member and admin services
-export type { Member, CreateMemberData } from "./memberService";
-export type { Admin, CreateAdminData } from "./adminService";
+export type { Member, CreateMemberData } from "../../back-end/controllers/memberController";
+export type { Admin, CreateAdminData } from "../../back-end/controllers/adminController";

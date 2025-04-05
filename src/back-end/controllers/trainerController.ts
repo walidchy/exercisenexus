@@ -1,3 +1,4 @@
+
 /**
  * Trainer controller for back-end API
  * This controller handles all trainer-related operations
@@ -104,7 +105,9 @@ export const trainerController = {
    * @returns Promise resolving to array of trainers
    */
   getAllTrainers: async (token: string): Promise<Trainer[]> => {
-    const response = await mockApi.get("/api/trainers", token);
+    const response = await mockApi.get("/api/trainers", {
+      headers: { Authorization: `Bearer ${token}` }
+    });
     return response.data || sampleTrainers;
   },
 
@@ -116,7 +119,9 @@ export const trainerController = {
    */
   getTrainerById: async (token: string, id: number): Promise<Trainer | null> => {
     try {
-      const response = await mockApi.get(`/api/trainers/${id}`, token);
+      const response = await mockApi.get(`/api/trainers/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       return response.data || sampleTrainers.find(trainer => trainer.id === id) || null;
     } catch (error) {
       console.error("Error fetching trainer by ID:", error);
@@ -131,7 +136,9 @@ export const trainerController = {
    * @returns Promise resolving to the created trainer
    */
   createTrainer: async (token: string, trainerData: CreateTrainerData): Promise<Trainer> => {
-    const response = await mockApi.post("/api/trainers", trainerData, token);
+    const response = await mockApi.post("/api/trainers", trainerData, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
     
     // If using mock data, construct a trainer object
     if (!response.data) {
@@ -158,7 +165,9 @@ export const trainerController = {
    */
   updateTrainer: async (token: string, id: number, trainerData: Partial<CreateTrainerData>): Promise<Trainer | null> => {
     try {
-      const response = await mockApi.put(`/api/trainers/${id}`, trainerData, token);
+      const response = await mockApi.put(`/api/trainers/${id}`, trainerData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       
       // If using mock data, update the trainer
       if (!response.data) {
@@ -189,7 +198,9 @@ export const trainerController = {
    */
   deleteTrainer: async (token: string, id: number): Promise<boolean> => {
     try {
-      await mockApi.delete(`/api/trainers/${id}`, token);
+      await mockApi.delete(`/api/trainers/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       
       // If using mock data, remove the trainer
       const index = sampleTrainers.findIndex(trainer => trainer.id === id);
