@@ -7,13 +7,25 @@
 
 import { api as backendApi } from "../../back-end/services/api";
 import type { Trainer, CreateTrainerData } from "../../back-end/services/trainerService";
+import { memberService } from "./memberService";
+import { trainerService } from "./trainerService";
+import { adminService } from "./adminService";
 
 /**
  * Re-export the API service from the backend
  * This allows the frontend to use the same API service
  * while maintaining a clear separation of concerns
  */
-export const api = backendApi;
+export const api = {
+  ...backendApi,
+  members: memberService,
+  trainers: trainerService,
+  admins: adminService
+};
 
 // Also export the trainer service types from the back-end
 export type { Trainer, CreateTrainerData };
+
+// Re-export types from member and admin services
+export type { Member, CreateMemberData } from "./memberService";
+export type { Admin, CreateAdminData } from "./adminService";
