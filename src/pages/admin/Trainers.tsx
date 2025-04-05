@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -64,7 +63,6 @@ import {
 import { trainerService, Trainer } from "@/back-end/services/trainerService";
 import { useAuth } from "@/front-end/hooks/useAuth";
 
-// Define the schema for the trainer form
 const trainerSchema = z.object({
   name: z.string().min(2, {
     message: "Name must be at least 2 characters.",
@@ -93,7 +91,6 @@ const Trainers = () => {
   
   const queryClient = useQueryClient();
 
-  // Fetch trainers
   const { data: trainers = [], isLoading, error } = useQuery({
     queryKey: ['trainers'],
     queryFn: async () => {
@@ -105,9 +102,8 @@ const Trainers = () => {
     enabled: !!user?.token,
   });
 
-  // Add trainer mutation
   const addTrainerMutation = useMutation({
-    mutationFn: (newTrainer: Omit<Trainer, "id" | "joinDate" | "clients">) => {
+    mutationFn: (newTrainer: TrainerFormValues) => {
       if (!user?.token) {
         throw new Error("Authentication token is missing");
       }
@@ -123,7 +119,6 @@ const Trainers = () => {
     },
   });
 
-  // Update trainer mutation
   const updateTrainerMutation = useMutation({
     mutationFn: (updatedTrainer: Partial<Trainer> & { id: number }) => {
       if (!user?.token) {
@@ -141,7 +136,6 @@ const Trainers = () => {
     },
   });
 
-  // Delete trainer mutation
   const deleteTrainerMutation = useMutation({
     mutationFn: (trainerId: number) => {
       if (!user?.token) {
@@ -160,7 +154,6 @@ const Trainers = () => {
     },
   });
 
-  // Form for adding a trainer
   const addTrainerForm = useForm<TrainerFormValues>({
     resolver: zodResolver(trainerSchema),
     defaultValues: {
@@ -173,7 +166,6 @@ const Trainers = () => {
     },
   });
 
-  // Form for editing a trainer
   const editTrainerForm = useForm<TrainerFormValues>({
     resolver: zodResolver(trainerSchema),
     defaultValues: {
@@ -225,7 +217,7 @@ const Trainers = () => {
   };
 
   if (isLoading) return <div>Loading trainers...</div>;
-  if (error) return <div>Error: {error.message}</div>;
+  if (error) return <div>Error: {(error as Error).message}</div>;
 
   return (
     <AnimatedLayout>
@@ -424,7 +416,6 @@ const Trainers = () => {
           </CardContent>
         </Card>
 
-        {/* Edit Trainer Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
@@ -535,7 +526,6 @@ const Trainers = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Delete Trainer Dialog */}
         <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
