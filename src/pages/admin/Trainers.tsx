@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -80,7 +81,10 @@ const trainerSchema = z.object({
   status: z.enum(["Active", "Inactive", "Suspended"]),
 });
 
+// Define the type that matches what trainerService.addTrainer expects
 type TrainerFormValues = z.infer<typeof trainerSchema>;
+// Define a type for trainer updates which may have optional fields
+type TrainerUpdateValues = Partial<TrainerFormValues>;
 
 const Trainers = () => {
   const { user } = useAuth();
@@ -107,6 +111,7 @@ const Trainers = () => {
       if (!user?.token) {
         throw new Error("Authentication token is missing");
       }
+      // Make sure all required fields are present
       return trainerService.addTrainer(user.token, newTrainer);
     },
     onSuccess: () => {
