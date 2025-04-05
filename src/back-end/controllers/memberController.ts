@@ -1,166 +1,227 @@
 
 /**
- * Member Controller
- * Handles business logic for member-related operations
+ * Member controller for back-end API
+ * This controller handles all member-related operations
  */
 
-// Define Member type
+import { mockApi } from "../services/mockApi";
+
+/**
+ * Member interface defining member data structure
+ */
 export interface Member {
   id: number;
   name: string;
   email: string;
-  phone: string;
-  joinDate: string;
-  membershipType: string;
-  status: "Active" | "Inactive" | "Suspended";
+  phone?: string;
+  address?: string;
+  date_of_birth?: string;
+  membership_type: string;
+  membership_start_date: string;
+  membership_end_date?: string;
+  status: "active" | "inactive" | "suspended";
+  profile_image?: string;
+  created_at: string;
+  updated_at: string;
+  health_information?: {
+    medical_conditions?: string[];
+    allergies?: string[];
+    emergency_contact?: {
+      name: string;
+      relationship: string;
+      phone: string;
+    };
+  };
+  membership_id?: number;
 }
 
-// Mock data for development
-const mockMembers: Member[] = [
-  {
-    id: 1,
-    name: "John Smith",
-    email: "john.smith@example.com",
-    phone: "555-123-4567",
-    joinDate: "2023-01-15",
-    membershipType: "Premium",
-    status: "Active"
-  },
-  {
-    id: 2,
-    name: "Sarah Johnson",
-    email: "sarah.j@example.com",
-    phone: "555-987-6543",
-    joinDate: "2023-02-20",
-    membershipType: "Standard",
-    status: "Active"
-  },
-  {
-    id: 3,
-    name: "Michael Brown",
-    email: "michael.b@example.com",
-    phone: "555-456-7890",
-    joinDate: "2023-03-05",
-    membershipType: "Basic",
-    status: "Inactive"
-  },
-  {
-    id: 4,
-    name: "Emily Wilson",
-    email: "emily.w@example.com",
-    phone: "555-789-0123",
-    joinDate: "2023-04-10",
-    membershipType: "Premium",
-    status: "Active"
-  },
-  {
-    id: 5,
-    name: "David Lee",
-    email: "david.l@example.com",
-    phone: "555-321-6547",
-    joinDate: "2023-05-25",
-    membershipType: "Standard",
-    status: "Suspended"
-  }
-];
-
-// Interface for creating a new member
+/**
+ * Interface for creating a new member
+ */
 export interface CreateMemberData {
   name: string;
   email: string;
-  phone: string;
-  membershipType: string;
-  status: "Active" | "Inactive" | "Suspended";
+  phone?: string;
+  address?: string;
+  date_of_birth?: string;
+  membership_type: string;
+  status?: "active" | "inactive" | "suspended";
+  profile_image?: string;
+  health_information?: {
+    medical_conditions?: string[];
+    allergies?: string[];
+    emergency_contact?: {
+      name: string;
+      relationship: string;
+      phone: string;
+    };
+  };
+  membership_id?: number;
 }
 
-/**
- * Get all members
- * @param token Authentication token
- * @returns Promise resolving to array of members
- */
-export const getAllMembers = async (token: string): Promise<Member[]> => {
-  // In a real implementation, validate token and fetch from database
-  // For now, just return mock data
-  return mockMembers;
-};
-
-/**
- * Get member by ID
- * @param token Authentication token
- * @param id Member ID
- * @returns Promise resolving to member or null if not found
- */
-export const getMemberById = async (token: string, id: number): Promise<Member | null> => {
-  const member = mockMembers.find(m => m.id === id);
-  return member || null;
-};
-
-/**
- * Create a new member
- * @param token Authentication token
- * @param memberData Data for the new member
- * @returns Promise resolving to the created member
- */
-export const createMember = async (token: string, memberData: CreateMemberData): Promise<Member> => {
-  // In a real implementation, validate token and insert into database
-  const newMember: Member = {
-    id: mockMembers.length + 1,
-    joinDate: new Date().toISOString().split('T')[0],
-    ...memberData
-  };
-  
-  // In a real app, we would add to database
-  mockMembers.push(newMember);
-  
-  return newMember;
-};
-
-/**
- * Update a member
- * @param token Authentication token
- * @param id Member ID
- * @param memberData Updated member data
- * @returns Promise resolving to the updated member
- */
-export const updateMember = async (token: string, id: number, memberData: Partial<CreateMemberData>): Promise<Member | null> => {
-  const memberIndex = mockMembers.findIndex(m => m.id === id);
-  
-  if (memberIndex === -1) {
-    return null;
+// Sample data for mocking API responses
+const sampleMembers: Member[] = [
+  {
+    id: 1,
+    name: "John Doe",
+    email: "john.doe@example.com",
+    phone: "555-123-4567",
+    address: "123 Main St, Anytown, USA",
+    date_of_birth: "1990-05-15",
+    membership_type: "premium",
+    membership_start_date: "2023-01-01",
+    membership_end_date: "2023-12-31",
+    status: "active",
+    profile_image: "https://randomuser.me/api/portraits/men/1.jpg",
+    created_at: "2023-01-01T08:00:00Z",
+    updated_at: "2023-01-01T08:00:00Z",
+    health_information: {
+      medical_conditions: ["None"],
+      allergies: ["None"],
+      emergency_contact: {
+        name: "Jane Doe",
+        relationship: "Spouse",
+        phone: "555-987-6543"
+      }
+    },
+    membership_id: 1
+  },
+  {
+    id: 2,
+    name: "Jane Smith",
+    email: "jane.smith@example.com",
+    phone: "555-234-5678",
+    address: "456 Oak Ave, Somewhere, USA",
+    date_of_birth: "1985-08-20",
+    membership_type: "basic",
+    membership_start_date: "2023-02-15",
+    membership_end_date: "2023-08-15",
+    status: "active",
+    profile_image: "https://randomuser.me/api/portraits/women/2.jpg",
+    created_at: "2023-02-15T09:30:00Z",
+    updated_at: "2023-02-15T09:30:00Z",
+    health_information: {
+      medical_conditions: ["Asthma"],
+      allergies: ["Peanuts"],
+      emergency_contact: {
+        name: "John Smith",
+        relationship: "Spouse",
+        phone: "555-876-5432"
+      }
+    },
+    membership_id: 2
   }
-  
-  const updatedMember = {
-    ...mockMembers[memberIndex],
-    ...memberData
-  };
-  
-  mockMembers[memberIndex] = updatedMember;
-  
-  return updatedMember;
-};
+];
 
 /**
- * Delete a member
- * @param token Authentication token
- * @param id Member ID
- * @returns Promise resolving to boolean indicating success
+ * Member controller implementation
+ * Uses mock API for development and testing purposes
  */
-export const deleteMember = async (token: string, id: number): Promise<boolean> => {
-  const memberIndex = mockMembers.findIndex(m => m.id === id);
-  
-  if (memberIndex === -1) {
-    return false;
-  }
-  
-  mockMembers.splice(memberIndex, 1);
-  
-  return true;
-};
-
 export const memberController = {
-  getAllMembers,
-  getMemberById,
-  createMember,
-  updateMember,
-  deleteMember,
+  /**
+   * Get all members
+   * @param token Authentication token
+   * @returns Promise resolving to array of members
+   */
+  getAllMembers: async (token: string): Promise<Member[]> => {
+    const response = await mockApi.get("/api/members", token);
+    return response.data || sampleMembers;
+  },
+
+  /**
+   * Get member by ID
+   * @param token Authentication token
+   * @param id Member ID
+   * @returns Promise resolving to member or null if not found
+   */
+  getMemberById: async (token: string, id: number): Promise<Member | null> => {
+    try {
+      const response = await mockApi.get(`/api/members/${id}`, token);
+      return response.data || sampleMembers.find(member => member.id === id) || null;
+    } catch (error) {
+      console.error("Error fetching member by ID:", error);
+      return null;
+    }
+  },
+
+  /**
+   * Create a new member
+   * @param token Authentication token
+   * @param memberData Data for the new member
+   * @returns Promise resolving to the created member
+   */
+  createMember: async (token: string, memberData: CreateMemberData): Promise<Member> => {
+    const response = await mockApi.post("/api/members", memberData, token);
+    
+    // If using mock data, construct a member object
+    if (!response.data) {
+      const newMember: Member = {
+        id: sampleMembers.length + 1,
+        ...memberData,
+        membership_start_date: new Date().toISOString().split('T')[0],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        status: memberData.status || "active"
+      };
+      sampleMembers.push(newMember);
+      return newMember;
+    }
+    
+    return response.data;
+  },
+
+  /**
+   * Update a member
+   * @param token Authentication token
+   * @param id Member ID
+   * @param memberData Updated member data
+   * @returns Promise resolving to the updated member
+   */
+  updateMember: async (token: string, id: number, memberData: Partial<CreateMemberData>): Promise<Member | null> => {
+    try {
+      const response = await mockApi.put(`/api/members/${id}`, memberData, token);
+      
+      // If using mock data, update the member
+      if (!response.data) {
+        const index = sampleMembers.findIndex(member => member.id === id);
+        if (index !== -1) {
+          sampleMembers[index] = {
+            ...sampleMembers[index],
+            ...memberData,
+            updated_at: new Date().toISOString()
+          };
+          return sampleMembers[index];
+        }
+        return null;
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error("Error updating member:", error);
+      return null;
+    }
+  },
+
+  /**
+   * Delete a member
+   * @param token Authentication token
+   * @param id Member ID
+   * @returns Promise resolving to boolean indicating success
+   */
+  deleteMember: async (token: string, id: number): Promise<boolean> => {
+    try {
+      await mockApi.delete(`/api/members/${id}`, token);
+      
+      // If using mock data, remove the member
+      const index = sampleMembers.findIndex(member => member.id === id);
+      if (index !== -1) {
+        sampleMembers.splice(index, 1);
+      }
+      
+      return true;
+    } catch (error) {
+      console.error("Error deleting member:", error);
+      return false;
+    }
+  }
 };

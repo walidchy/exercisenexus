@@ -60,9 +60,9 @@ export const adminService = {
   deleteAdmin: async (token: string, id: number): Promise<boolean> => {
     return adminController.deleteAdmin(token, id);
   },
-
+  
   /**
-   * Verify a user (member, trainer)
+   * Verify a user
    * @param token Authentication token
    * @param userId User ID to verify
    * @returns Promise resolving to boolean indicating success
@@ -70,23 +70,13 @@ export const adminService = {
   verifyUser: async (token: string, userId: number): Promise<boolean> => {
     return adminController.verifyUser(token, userId);
   },
-
+  
   /**
-   * Reject a user verification request
+   * Get users pending verification
    * @param token Authentication token
-   * @param userId User ID to reject
-   * @returns Promise resolving to boolean indicating success
+   * @returns Promise resolving to array of unverified users
    */
-  rejectUser: async (token: string, userId: number): Promise<boolean> => {
-    return adminController.rejectUser(token, userId);
-  },
-
-  /**
-   * Get system statistics
-   * @param token Authentication token
-   * @returns Promise resolving to system statistics
-   */
-  getSystemStats: async (token: string): Promise<Record<string, number>> => {
-    return adminController.getSystemStats(token);
+  getPendingVerifications: async (token: string): Promise<any[]> => {
+    return adminController.getPendingVerifications(token);
   }
 };
