@@ -6,6 +6,7 @@
  */
 
 import { api as backendApi } from "../../back-end/services/api";
+import type { Trainer, CreateTrainerData } from "../../back-end/services/trainerService";
 
 /**
  * Re-export the API service from the backend
@@ -15,4 +16,4 @@ import { api as backendApi } from "../../back-end/services/api";
 export const api = backendApi;
 
 // Also export the trainer service types from the back-end
-export { Trainer, CreateTrainerData } from "../../back-end/services/trainerService";
+export type { Trainer, CreateTrainerData };

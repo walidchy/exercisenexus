@@ -60,7 +60,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { trainerService, Trainer, CreateTrainerData } from "@/back-end/services/trainerService";
+import { trainerService } from "@/services/trainerService";
+import type { Trainer, CreateTrainerData } from "@/services/trainerService";
 import { useAuth } from "@/front-end/hooks/useAuth";
 
 const trainerSchema = z.object({
@@ -104,7 +105,7 @@ const Trainers = () => {
   });
 
   const addTrainerMutation = useMutation({
-    mutationFn: (newTrainer: TrainerFormValues) => {
+    mutationFn: (newTrainer: CreateTrainerData) => {
       if (!user?.token) {
         throw new Error("Authentication token is missing");
       }
@@ -155,7 +156,7 @@ const Trainers = () => {
     },
   });
 
-  const addTrainerForm = useForm<TrainerFormValues>({
+  const addTrainerForm = useForm<CreateTrainerData>({
     resolver: zodResolver(trainerSchema),
     defaultValues: {
       name: "",
@@ -163,7 +164,7 @@ const Trainers = () => {
       phone: "",
       specialization: "",
       rating: 0,
-      status: "Active" as const,
+      status: "Active",
     },
   });
 
@@ -201,7 +202,7 @@ const Trainers = () => {
     }
   }, [selectedTrainer, editTrainerForm]);
 
-  const handleAddTrainer = (values: TrainerFormValues) => {
+  const handleAddTrainer = (values: CreateTrainerData) => {
     addTrainerMutation.mutate(values);
   };
 
