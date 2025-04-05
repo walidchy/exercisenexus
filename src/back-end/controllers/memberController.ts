@@ -1,10 +1,9 @@
-
 /**
  * Member controller for back-end API
  * This controller handles all member-related operations
  */
 
-import { mockApi } from "../services/mockApi";
+import mockApi from "../services/mockApi";
 
 /**
  * Member interface defining member data structure

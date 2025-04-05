@@ -1,10 +1,9 @@
-
 /**
  * Trainer controller for back-end API
  * This controller handles all trainer-related operations
  */
 
-import { mockApi } from "../services/mockApi";
+import mockApi from "../services/mockApi";
 
 /**
  * Trainer interface defining trainer data structure

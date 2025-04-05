@@ -1,10 +1,9 @@
-
 /**
  * Admin controller for back-end API
  * This controller handles all admin-related operations
  */
 
-import { mockApi } from "../services/mockApi";
+import mockApi from "../services/mockApi";
 
 /**
  * Admin interface defining admin data structure
