@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { API_BASE_URL } from '../config/api';
 
 // Create an axios instance
-const api = axios.create({
+const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
@@ -13,7 +13,7 @@ const api = axios.create({
 });
 
 // Request interceptor to attach the auth token to every request
-api.interceptors.request.use(
+apiClient.interceptors.request.use(
   (config) => {
     const userData = localStorage.getItem('gym_user');
     if (userData) {
@@ -30,7 +30,7 @@ api.interceptors.request.use(
 );
 
 // Response interceptor to handle common error cases
-api.interceptors.response.use(
+apiClient.interceptors.response.use(
   (response) => {
     return response;
   },
@@ -72,32 +72,30 @@ api.interceptors.response.use(
   }
 );
 
-export { api };
-
 // Auth API functions
 export const authApi = {
   login: async (email: string, password: string) => {
-    const response = await api.post('/login', { email, password });
+    const response = await apiClient.post('/login', { email, password });
     return response.data;
   },
   
   register: async (userData: any) => {
-    const response = await api.post('/register', userData);
+    const response = await apiClient.post('/register', userData);
     return response.data;
   },
   
   logout: async () => {
-    const response = await api.post('/logout');
+    const response = await apiClient.post('/logout');
     return response.data;
   },
   
   getCurrentUser: async () => {
-    const response = await api.get('/user');
+    const response = await apiClient.get('/user');
     return response.data.data;
   },
   
   forgotPassword: async (email: string) => {
-    const response = await api.post('/forgot-password', { email });
+    const response = await apiClient.post('/forgot-password', { email });
     return response.data;
   }
 };
@@ -105,42 +103,42 @@ export const authApi = {
 // Activities API functions
 export const activitiesApi = {
   getActivities: async (params = {}) => {
-    const response = await api.get('/activities', { params });
+    const response = await apiClient.get('/activities', { params });
     return response.data.data || [];
   },
   
   getActivity: async (id: number) => {
-    const response = await api.get(`/activities/${id}`);
+    const response = await apiClient.get(`/activities/${id}`);
     return response.data.data;
   },
   
   createActivity: async (activityData: any) => {
-    const response = await api.post('/activities', activityData);
+    const response = await apiClient.post('/activities', activityData);
     return response.data.data;
   },
   
   updateActivity: async (id: number, activityData: any) => {
-    const response = await api.put(`/activities/${id}`, activityData);
+    const response = await apiClient.put(`/activities/${id}`, activityData);
     return response.data.data;
   },
   
   deleteActivity: async (id: number) => {
-    const response = await api.delete(`/activities/${id}`);
+    const response = await apiClient.delete(`/activities/${id}`);
     return response.data;
   },
   
   addSchedule: async (activityId: number, scheduleData: any) => {
-    const response = await api.post(`/activities/${activityId}/schedules`, scheduleData);
+    const response = await apiClient.post(`/activities/${activityId}/schedules`, scheduleData);
     return response.data.data;
   },
   
   updateSchedule: async (activityId: number, scheduleId: number, scheduleData: any) => {
-    const response = await api.put(`/activities/${activityId}/schedules/${scheduleId}`, scheduleData);
+    const response = await apiClient.put(`/activities/${activityId}/schedules/${scheduleId}`, scheduleData);
     return response.data.data;
   },
   
   deleteSchedule: async (activityId: number, scheduleId: number) => {
-    const response = await api.delete(`/activities/${activityId}/schedules/${scheduleId}`);
+    const response = await apiClient.delete(`/activities/${activityId}/schedules/${scheduleId}`);
     return response.data;
   }
 };
@@ -148,27 +146,27 @@ export const activitiesApi = {
 // Bookings API functions
 export const bookingsApi = {
   getBookings: async (params = {}) => {
-    const response = await api.get('/bookings', { params });
+    const response = await apiClient.get('/bookings', { params });
     return response.data.data || [];
   },
   
   createBooking: async (bookingData: any) => {
-    const response = await api.post('/bookings', bookingData);
+    const response = await apiClient.post('/bookings', bookingData);
     return response.data.data;
   },
   
   getBooking: async (id: number) => {
-    const response = await api.get(`/bookings/${id}`);
+    const response = await apiClient.get(`/bookings/${id}`);
     return response.data.data;
   },
   
   cancelBooking: async (id: number, reason?: string) => {
-    const response = await api.patch(`/bookings/${id}/cancel`, { cancellation_reason: reason });
+    const response = await apiClient.patch(`/bookings/${id}/cancel`, { cancellation_reason: reason });
     return response.data.data;
   },
   
   completeBooking: async (id: number) => {
-    const response = await api.patch(`/bookings/${id}/complete`);
+    const response = await apiClient.patch(`/bookings/${id}/complete`);
     return response.data.data;
   }
 };
@@ -176,22 +174,22 @@ export const bookingsApi = {
 // Memberships API functions
 export const membershipsApi = {
   getMembershipPlans: async () => {
-    const response = await api.get('/membership-plans');
+    const response = await apiClient.get('/membership-plans');
     return response.data.data || [];
   },
   
   getMembershipPlan: async (id: number) => {
-    const response = await api.get(`/membership-plans/${id}`);
+    const response = await apiClient.get(`/membership-plans/${id}`);
     return response.data.data;
   },
   
   getUserMembership: async () => {
-    const response = await api.get('/my-membership');
+    const response = await apiClient.get('/my-membership');
     return response.data.data;
   },
   
   subscribe: async (planId: number, paymentMethod: string) => {
-    const response = await api.post('/subscribe', { membership_plan_id: planId, payment_method: paymentMethod });
+    const response = await apiClient.post('/subscribe', { membership_plan_id: planId, payment_method: paymentMethod });
     return response.data.data;
   }
 };
@@ -199,17 +197,22 @@ export const membershipsApi = {
 // User management API functions
 export const usersApi = {
   getUsers: async (params = {}) => {
-    const response = await api.get('/users', { params });
+    const response = await apiClient.get('/users', { params });
     return response.data.data || [];
   },
   
   verifyUser: async (userId: number) => {
-    const response = await api.patch(`/users/${userId}/verify`);
+    const response = await apiClient.patch(`/users/${userId}/verify`);
+    return response.data.data;
+  },
+  
+  rejectUser: async (userId: number) => {
+    const response = await apiClient.patch(`/users/${userId}/reject`);
     return response.data.data;
   },
   
   updateProfile: async (profileData: any) => {
-    const response = await api.put('/profile', profileData);
+    const response = await apiClient.put('/profile', profileData);
     return response.data.data;
   }
 };
@@ -217,37 +220,37 @@ export const usersApi = {
 // Trainers API functions
 export const trainersApi = {
   getTrainers: async (params = {}) => {
-    const response = await api.get('/trainers', { params });
+    const response = await apiClient.get('/trainers', { params });
     return response.data.data || [];
   },
   
   getTrainer: async (id: number) => {
-    const response = await api.get(`/trainers/${id}`);
+    const response = await apiClient.get(`/trainers/${id}`);
     return response.data.data;
   },
   
   createTrainer: async (trainerData: any) => {
-    const response = await api.post('/trainers', trainerData);
+    const response = await apiClient.post('/trainers', trainerData);
     return response.data.data;
   },
   
   updateTrainer: async (id: number, trainerData: any) => {
-    const response = await api.put(`/trainers/${id}`, trainerData);
+    const response = await apiClient.put(`/trainers/${id}`, trainerData);
     return response.data.data;
   },
   
   deleteTrainer: async (id: number) => {
-    const response = await api.delete(`/trainers/${id}`);
+    const response = await apiClient.delete(`/trainers/${id}`);
     return response.data;
   },
   
   getAvailability: async () => {
-    const response = await api.get('/trainer/availability');
+    const response = await apiClient.get('/trainer/availability');
     return response.data.data;
   },
   
   updateAvailability: async (availabilityData: any) => {
-    const response = await api.post('/trainer/availability', availabilityData);
+    const response = await apiClient.post('/trainer/availability', availabilityData);
     return response.data.data;
   }
 };
@@ -255,27 +258,27 @@ export const trainersApi = {
 // Members API functions
 export const membersApi = {
   getMembers: async (params = {}) => {
-    const response = await api.get('/members', { params });
+    const response = await apiClient.get('/members', { params });
     return response.data.data || [];
   },
   
   getMember: async (id: number) => {
-    const response = await api.get(`/members/${id}`);
+    const response = await apiClient.get(`/members/${id}`);
     return response.data.data;
   },
   
   createMember: async (memberData: any) => {
-    const response = await api.post('/members', memberData);
+    const response = await apiClient.post('/members', memberData);
     return response.data.data;
   },
   
   updateMember: async (id: number, memberData: any) => {
-    const response = await api.put(`/members/${id}`, memberData);
+    const response = await apiClient.put(`/members/${id}`, memberData);
     return response.data.data;
   },
   
   deleteMember: async (id: number) => {
-    const response = await api.delete(`/members/${id}`);
+    const response = await apiClient.delete(`/members/${id}`);
     return response.data;
   }
 };
@@ -283,12 +286,12 @@ export const membersApi = {
 // Notifications API functions
 export const notificationsApi = {
   getNotifications: async () => {
-    const response = await api.get('/notifications');
+    const response = await apiClient.get('/notifications');
     return response.data.data || [];
   },
   
   markAsRead: async (id: number) => {
-    const response = await api.patch(`/notifications/${id}/read`);
+    const response = await apiClient.patch(`/notifications/${id}/read`);
     return response.data;
   }
 };
@@ -296,7 +299,7 @@ export const notificationsApi = {
 // Equipment API functions
 export const equipmentApi = {
   getEquipment: async () => {
-    const response = await api.get('/equipment');
+    const response = await apiClient.get('/equipment');
     return response.data.data || [];
   }
 };
@@ -305,12 +308,15 @@ export const equipmentApi = {
 export const settingsApi = {
   getSettings: async (group?: string) => {
     const params = group ? { group } : {};
-    const response = await api.get('/settings', { params });
+    const response = await apiClient.get('/settings', { params });
     return response.data.data || [];
   },
   
   updateSetting: async (key: string, value: any) => {
-    const response = await api.put(`/settings/${key}`, { value });
+    const response = await apiClient.put(`/settings/${key}`, { value });
     return response.data.data;
   }
 };
+
+// Export the API client
+export { apiClient as api };

@@ -1,9 +1,10 @@
+
 /**
  * API service for the frontend that bridges to the backend implementation
  */
 
 import { 
-  api, 
+  api as apiClient, 
   authApi, 
   activitiesApi, 
   bookingsApi, 
@@ -16,14 +17,7 @@ import {
   settingsApi 
 } from "../../services/api";
 
-import { trainerController } from "../../back-end/controllers/trainerController";
-import { memberController } from "../../back-end/controllers/memberController";
-import { adminController } from "../../back-end/controllers/adminController";
-
-/**
- * Export the API service
- * Re-export from the main API service and use Laravel endpoints
- */
+// Re-export everything from the base api for frontend use
 export const api = {
   // Auth methods
   login: authApi.login,
@@ -50,6 +44,7 @@ export const api = {
   
   getUsers: usersApi.getUsers,
   verifyUser: usersApi.verifyUser,
+  rejectUser: usersApi.rejectUser,
   updateUserProfile: usersApi.updateProfile,
   
   getNotifications: notificationsApi.getNotifications,
@@ -60,13 +55,6 @@ export const api = {
   getSettings: settingsApi.getSettings,
   updateSetting: settingsApi.updateSetting,
   
-  // Keep controller references for backward compatibility
-  trainers: trainerController,
-  members: memberController,
-  admins: adminController
+  // Raw API client for direct access if needed
+  client: apiClient
 };
-
-// Export types from the back-end controllers for backward compatibility
-export type { Trainer, CreateTrainerData } from "../../back-end/controllers/trainerController";
-export type { Member, CreateMemberData } from "../../back-end/controllers/memberController";
-export type { Admin, CreateAdminData } from "../../back-end/controllers/adminController";

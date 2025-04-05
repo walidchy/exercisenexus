@@ -2,9 +2,6 @@
 // API configuration constants
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
-// Set this to false when connecting to a real Laravel backend
-export const USE_MOCK_DATA = false;
-
 // Base headers for API requests
 export const getHeaders = (token?: string) => {
   const headers: HeadersInit = {
@@ -43,6 +40,3 @@ export const handleApiError = (error: any): string => {
     return error.message || 'Unknown error occurred';
   }
 };
-
-// We're not using mock data anymore since we're connecting to Laravel backend
-// Removed MOCK_DATA object

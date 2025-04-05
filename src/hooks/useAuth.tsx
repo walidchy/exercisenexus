@@ -2,9 +2,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { api } from "../services/api";
-import axios from "axios";
-import { API_BASE_URL, getHeaders } from "../config/api";
+import { authApi } from "../services/api";
 
 // Define user types based on roles
 type UserRole = "member" | "trainer" | "admin";
@@ -38,45 +36,6 @@ const AuthContext = createContext<AuthContextType>({
   rejectUser: async () => {},
 });
 
-// Flag to use mock data when backend is not available
-const USE_MOCK_DATA = true; // Set to false when your backend is ready
-
-// Mock user data for development
-const MOCK_USERS = {
-  "member@example.com": {
-    id: 1,
-    name: "John Member",
-    email: "member@example.com",
-    role: "member" as UserRole,
-    isVerified: true,
-    token: "mock-token-member"
-  },
-  "trainer@example.com": {
-    id: 2,
-    name: "Jane Trainer",
-    email: "trainer@example.com",
-    role: "trainer" as UserRole,
-    isVerified: true,
-    token: "mock-token-trainer"
-  },
-  "admin@example.com": {
-    id: 3,
-    name: "Admin User",
-    email: "admin@example.com",
-    role: "admin" as UserRole,
-    isVerified: true,
-    token: "mock-token-admin"
-  },
-  "user@gmail.com": {
-    id: 4,
-    name: "Google User",
-    email: "user@gmail.com",
-    role: "member" as UserRole,
-    isVerified: true,
-    token: "mock-token-google"
-  }
-};
-
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -92,23 +51,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (savedUser) {
           const parsedUser = JSON.parse(savedUser);
           
-          if (USE_MOCK_DATA) {
-            // Just use the saved user data for mock mode
-            setUser(parsedUser);
-          } else {
-            // Validate token by fetching current user
-            try {
-              const userData = await api.getCurrentUser(parsedUser.token);
-              setUser({
-                ...userData,
-                isVerified: userData.is_verified,
-                token: parsedUser.token
-              });
-            } catch (error) {
-              console.error("Token validation error:", error);
-              localStorage.removeItem("gym_user");
-              setUser(null);
-            }
+          // Validate token by fetching current user
+          try {
+            const userData = await authApi.getCurrentUser();
+            setUser({
+              ...userData,
+              isVerified: userData.is_verified,
+              token: parsedUser.token
+            });
+          } catch (error) {
+            console.error("Token validation error:", error);
+            localStorage.removeItem("gym_user");
+            setUser(null);
           }
         } else {
           // No saved user, ensure user is null
@@ -136,38 +90,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setIsLoading(true);
     
     try {
-      if (USE_MOCK_DATA) {
-        // Mock login for development without backend
-        const mockUser = MOCK_USERS[email as keyof typeof MOCK_USERS];
-        
-        if (mockUser) {
-          // For mock data, accept any password - this is only for development
-          // In a real app, we would properly validate credentials
-          
-          // Simulate API delay
-          await new Promise(resolve => setTimeout(resolve, 800));
-          
-          setUser(mockUser);
-          localStorage.setItem("gym_user", JSON.stringify(mockUser));
-          
-          // Redirect based on user role
-          if (mockUser.role === "member") {
-            navigate("/member");
-          } else if (mockUser.role === "trainer") {
-            navigate("/trainer");
-          } else if (mockUser.role === "admin") {
-            navigate("/admin");
-          }
-          
-          toast.success("Login successful (Mock Mode)");
-          return;
-        } else {
-          throw new Error("User not found");
-        }
-      }
-      
       // Call the API service
-      const response = await api.login(email, password);
+      const response = await authApi.login(email, password);
       
       // Check if user is verified
       if (!response.user.is_verified) {
@@ -189,9 +113,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Save user to state and localStorage
       setUser(userData);
       localStorage.setItem("gym_user", JSON.stringify(userData));
-      
-      // Set default Authorization header for axios requests
-      axios.defaults.headers.common['Authorization'] = `Bearer ${response.token}`;
       
       // Redirect based on user role
       if (userData.role === "member") {
@@ -216,18 +137,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // User verification function (for admin)
   const verifyUser = async (userId: number) => {
     try {
-      if (USE_MOCK_DATA) {
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 800));
-        toast.success("User verified successfully (Mock Mode)");
-        return Promise.resolve();
-      }
-      
-      if (!user?.token) {
-        throw new Error("No auth token available");
-      }
-      
-      await api.verifyUser(user.token, userId);
+      await usersApi.verifyUser(userId);
       toast.success("User verified successfully");
       return Promise.resolve();
     } catch (error) {
@@ -240,18 +150,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // User rejection function (for admin)
   const rejectUser = async (userId: number) => {
     try {
-      if (USE_MOCK_DATA) {
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 800));
-        toast.success("User rejected successfully (Mock Mode)");
-        return Promise.resolve();
-      }
-      
-      if (!user?.token) {
-        throw new Error("No auth token available");
-      }
-      
-      await api.rejectUser(user.token, userId);
+      await usersApi.rejectUser(userId);
       toast.success("User rejected successfully");
       return Promise.resolve();
     } catch (error) {
@@ -263,15 +162,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Logout function
   const logout = () => {
-    if (!USE_MOCK_DATA && user?.token) {
-      // Call API to invalidate token
-      api.logout(user.token).catch(err => {
-        console.error("Logout API error:", err);
-      });
-    }
-    
-    // Clear axios Authorization header
-    delete axios.defaults.headers.common['Authorization'];
+    // Call API to invalidate token
+    authApi.logout().catch(err => {
+      console.error("Logout API error:", err);
+    });
     
     setUser(null);
     localStorage.removeItem("gym_user");
@@ -316,3 +210,6 @@ export const useRequireAuth = (allowedRoles?: UserRole[]) => {
   
   return { user, isLoading };
 };
+
+// Add missing imports
+import { usersApi } from "../services/api";

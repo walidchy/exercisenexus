@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,7 +11,7 @@ import {
 import AnimatedLayout from "@/components/ui/AnimatedLayout";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
-import { api } from "@/services/api";
+import { membershipsApi } from "@/services/api";
 
 interface MembershipPlan {
   id: number;
@@ -32,11 +31,7 @@ export default function MembershipPlans() {
     const fetchMembershipPlans = async () => {
       try {
         setLoading(true);
-        if (!user?.token) {
-          throw new Error("No authentication token found");
-        }
-        
-        const response = await api.getMembershipPlans(user.token);
+        const response = await membershipsApi.getMembershipPlans();
         setPlans(response);
       } catch (error) {
         console.error("Error fetching membership plans:", error);
@@ -94,16 +89,16 @@ export default function MembershipPlans() {
     };
 
     fetchMembershipPlans();
-  }, [user]);
+  }, []);
 
   const handleSubscribe = async (planId: number) => {
     try {
-      if (!user?.token) {
+      if (!user) {
         toast.error("Please log in to subscribe");
         return;
       }
       
-      await api.subscribe(user.token, planId, "credit_card");
+      await membershipsApi.subscribe(planId, "credit_card");
       toast.success("Successfully subscribed to plan!");
     } catch (error) {
       console.error("Error subscribing to plan:", error);

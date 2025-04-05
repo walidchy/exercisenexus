@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,78 +15,56 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { api } from "@/services/api";
+import { usersApi } from "@/services/api";
 
-// Mock pending users data
-const pendingUsers = [
-  {
-    id: 101,
-    name: "Alex Johnson",
-    email: "alex@example.com",
-    role: "member",
-    registeredDate: "2023-11-15",
-    status: "pending"
-  },
-  {
-    id: 102,
-    name: "Maria Garcia",
-    email: "maria@example.com",
-    role: "trainer",
-    registeredDate: "2023-11-16",
-    status: "pending"
-  },
-  {
-    id: 103,
-    name: "James Wilson",
-    email: "james@example.com",
-    role: "member",
-    registeredDate: "2023-11-17",
-    status: "pending"
-  },
-  {
-    id: 104,
-    name: "Emma Brown",
-    email: "emma@example.com",
-    role: "trainer",
-    registeredDate: "2023-11-18",
-    status: "pending"
-  },
-  {
-    id: 105,
-    name: "Michael Davis",
-    email: "michael@example.com",
-    role: "admin",
-    registeredDate: "2023-11-19",
-    status: "pending"
-  }
-];
+// User type
+interface UserListItem {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  registeredDate: string;
+  status: "pending" | "verified" | "rejected";
+}
 
 export default function UserVerification() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
-  const [users, setUsers] = useState(pendingUsers);
+  const [users, setUsers] = useState<UserListItem[]>([]);
   const [isLoading, setIsLoading] = useState<{[key: number]: boolean}>({});
-  const { user, verifyUser } = useAuth();
+  const { user, verifyUser, rejectUser } = useAuth();
   
   // Fetch users when component mounts
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchPendingUsers = async () => {
       try {
-        if (user?.token) {
-          const fetchedUsers = await api.getUsers(user.token, undefined, false);
-          setUsers(fetchedUsers);
-        }
+        setIsLoading(prev => ({ ...prev, loading: true }));
+        const fetchedUsers = await usersApi.getUsers({ verified: false });
+        
+        // Map API response to component state
+        const mappedUsers = fetchedUsers.map((user: any) => ({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          registeredDate: new Date(user.created_at).toLocaleDateString(),
+          status: "pending"
+        }));
+        
+        setUsers(mappedUsers);
       } catch (error) {
         console.error("Failed to fetch users:", error);
         toast.error("Failed to load pending users. Please try again.");
+        
+        // Fallback to empty users list
+        setUsers([]);
+      } finally {
+        setIsLoading(prev => ({ ...prev, loading: false }));
       }
     };
     
-    // Only use the API if we're not in mock mode
-    if (!import.meta.env.VITE_USE_MOCK_DATA) {
-      fetchPendingUsers();
-    }
-  }, [user]);
+    fetchPendingUsers();
+  }, []);
   
   const filteredUsers = users.filter(user => {
     // Apply search filter
@@ -126,16 +104,7 @@ export default function UserVerification() {
     try {
       setIsLoading(prev => ({ ...prev, [userId]: true }));
       
-      // In a real app, this would call an API to reject the user
-      if (user?.token) {
-        // If we have an actual API endpoint for rejecting users
-        if (!import.meta.env.VITE_USE_MOCK_DATA) {
-          await api.rejectUser(user.token, userId);
-        } else {
-          // Simulate API delay for mock data
-          await new Promise(resolve => setTimeout(resolve, 800));
-        }
-      }
+      await rejectUser(userId);
       
       // Update local state to reflect the change
       setUsers(users.map(user => 
