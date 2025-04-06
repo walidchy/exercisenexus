@@ -2,7 +2,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { authApi, usersApi } from "../services/api";
+import { api } from "../services/api";
 
 // Create context with default values
 const AuthContext = createContext({
@@ -31,7 +31,7 @@ export const AuthProvider = ({ children }) => {
           
           // Validate token by fetching current user
           try {
-            const userData = await authApi.getCurrentUser();
+            const userData = await api.getCurrentUser();
             setUser({
               ...userData,
               isVerified: userData.is_verified,
@@ -69,7 +69,7 @@ export const AuthProvider = ({ children }) => {
     
     try {
       // Call the API service
-      const response = await authApi.login(email, password);
+      const response = await api.login(email, password);
       
       // Check if user is verified
       if (!response.user.is_verified) {
@@ -115,7 +115,7 @@ export const AuthProvider = ({ children }) => {
   // User verification function (for admin)
   const verifyUser = async (userId) => {
     try {
-      await usersApi.verifyUser(userId);
+      await api.verifyUser(userId);
       toast.success("User verified successfully");
       return Promise.resolve();
     } catch (error) {
@@ -128,7 +128,7 @@ export const AuthProvider = ({ children }) => {
   // User rejection function (for admin)
   const rejectUser = async (userId) => {
     try {
-      await usersApi.rejectUser(userId);
+      await api.rejectUser(userId);
       toast.success("User rejected successfully");
       return Promise.resolve();
     } catch (error) {
@@ -141,7 +141,7 @@ export const AuthProvider = ({ children }) => {
   // Logout function
   const logout = () => {
     // Call API to invalidate token
-    authApi.logout().catch(err => {
+    api.logout().catch(err => {
       console.error("Logout API error:", err);
     });
     

@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { API_BASE_URL } from '../config/api';
 
 // Create an axios instance
-const api = axios.create({
+const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
@@ -13,12 +13,12 @@ const api = axios.create({
 });
 
 // Request interceptor to attach the auth token to every request
-api.interceptors.request.use(
+apiClient.interceptors.request.use(
   (config) => {
-    const storedUser = localStorage.getItem('gym_user');
-    if (storedUser) {
-      const user = JSON.parse(storedUser);
-      if (user && user.token) {
+    const userData = localStorage.getItem('gym_user');
+    if (userData) {
+      const user = JSON.parse(userData);
+      if (user.token) {
         config.headers.Authorization = `Bearer ${user.token}`;
       }
     }
@@ -30,7 +30,7 @@ api.interceptors.request.use(
 );
 
 // Response interceptor to handle common error cases
-api.interceptors.response.use(
+apiClient.interceptors.response.use(
   (response) => {
     return response;
   },
@@ -72,185 +72,252 @@ api.interceptors.response.use(
   }
 );
 
-export default api;
-
-// Auth API
+// Auth API functions
 export const authApi = {
-  login: async (credentials) => {
-    const response = await api.post('/login', credentials);
+  login: async (email, password) => {
+    const response = await apiClient.post('/login', { email, password });
     return response.data;
   },
   
   register: async (userData) => {
-    const response = await api.post('/register', userData);
+    const response = await apiClient.post('/register', userData);
     return response.data;
   },
   
   logout: async () => {
-    await api.post('/logout');
-    localStorage.removeItem('gym_user');
+    const response = await apiClient.post('/logout');
+    return response.data;
   },
   
   getCurrentUser: async () => {
-    const response = await api.get('/user');
+    const response = await apiClient.get('/user');
     return response.data.data;
   },
   
   forgotPassword: async (email) => {
-    await api.post('/forgot-password', { email });
+    const response = await apiClient.post('/forgot-password', { email });
+    return response.data;
   }
 };
 
-// Activities API
+// Activities API functions
 export const activitiesApi = {
-  getActivities: async (queryParams) => {
-    try {
-      const url = `/activities${queryParams ? `?${queryParams}` : ''}`;
-      const response = await api.get(url);
-      return response.data.data || [];
-    } catch (error) {
-      console.error('Error fetching activities:', error);
-      return [];
-    }
+  getActivities: async (params = {}) => {
+    const response = await apiClient.get('/activities', { params });
+    return response.data.data || [];
   },
   
   getActivity: async (id) => {
-    const response = await api.get(`/activities/${id}`);
+    const response = await apiClient.get(`/activities/${id}`);
     return response.data.data;
   },
   
-  createActivity: async (data) => {
-    const response = await api.post('/activities', data);
+  createActivity: async (activityData) => {
+    const response = await apiClient.post('/activities', activityData);
     return response.data.data;
   },
   
-  updateActivity: async (id, data) => {
-    const response = await api.put(`/activities/${id}`, data);
+  updateActivity: async (id, activityData) => {
+    const response = await apiClient.put(`/activities/${id}`, activityData);
     return response.data.data;
   },
   
   deleteActivity: async (id) => {
-    await api.delete(`/activities/${id}`);
-  }
-};
-
-// Bookings API
-export const bookingsApi = {
-  getBookings: async (queryParams) => {
-    const url = `/bookings${queryParams ? `?${queryParams}` : ''}`;
-    const response = await api.get(url);
-    return response.data.data || [];
+    const response = await apiClient.delete(`/activities/${id}`);
+    return response.data;
   },
   
-  createBooking: async (data) => {
-    const response = await api.post('/bookings', data);
+  addSchedule: async (activityId, scheduleData) => {
+    const response = await apiClient.post(`/activities/${activityId}/schedules`, scheduleData);
     return response.data.data;
   },
   
-  cancelBooking: async (id) => {
-    const response = await api.patch(`/bookings/${id}/cancel`);
+  updateSchedule: async (activityId, scheduleId, scheduleData) => {
+    const response = await apiClient.put(`/activities/${activityId}/schedules/${scheduleId}`, scheduleData);
+    return response.data.data;
+  },
+  
+  deleteSchedule: async (activityId, scheduleId) => {
+    const response = await apiClient.delete(`/activities/${activityId}/schedules/${scheduleId}`);
+    return response.data;
+  }
+};
+
+// Bookings API functions
+export const bookingsApi = {
+  getBookings: async (params = {}) => {
+    const response = await apiClient.get('/bookings', { params });
+    return response.data.data || [];
+  },
+  
+  createBooking: async (bookingData) => {
+    const response = await apiClient.post('/bookings', bookingData);
+    return response.data.data;
+  },
+  
+  getBooking: async (id) => {
+    const response = await apiClient.get(`/bookings/${id}`);
+    return response.data.data;
+  },
+  
+  cancelBooking: async (id, reason) => {
+    const response = await apiClient.patch(`/bookings/${id}/cancel`, { cancellation_reason: reason });
     return response.data.data;
   },
   
   completeBooking: async (id) => {
-    const response = await api.patch(`/bookings/${id}/complete`);
+    const response = await apiClient.patch(`/bookings/${id}/complete`);
     return response.data.data;
   }
 };
 
-// Memberships API
+// Memberships API functions
 export const membershipsApi = {
   getMembershipPlans: async () => {
-    const response = await api.get('/membership-plans');
+    const response = await apiClient.get('/membership-plans');
     return response.data.data || [];
   },
   
+  getMembershipPlan: async (id) => {
+    const response = await apiClient.get(`/membership-plans/${id}`);
+    return response.data.data;
+  },
+  
   getUserMembership: async () => {
-    const response = await api.get('/my-membership');
+    const response = await apiClient.get('/my-membership');
     return response.data.data;
   },
   
   subscribe: async (planId, paymentMethod) => {
-    const response = await api.post('/subscribe', { 
-      plan_id: planId, 
-      payment_method: paymentMethod 
-    });
+    const response = await apiClient.post('/subscribe', { membership_plan_id: planId, payment_method: paymentMethod });
     return response.data.data;
   }
 };
 
-// Users API
+// User management API functions
 export const usersApi = {
   getUsers: async (role) => {
-    const url = role ? `/users?role=${role}` : '/users';
-    const response = await api.get(url);
+    const params = role ? { role } : {};
+    const response = await apiClient.get('/users', { params });
     return response.data.data || [];
   },
   
   verifyUser: async (userId) => {
-    const response = await api.patch(`/users/${userId}/verify`);
+    const response = await apiClient.patch(`/users/${userId}/verify`);
     return response.data.data;
   },
   
   rejectUser: async (userId) => {
-    const response = await api.delete(`/users/${userId}`);
+    const response = await apiClient.patch(`/users/${userId}/reject`);
+    return response.data.data;
+  },
+  
+  updateProfile: async (profileData) => {
+    const response = await apiClient.put('/profile', profileData);
+    return response.data.data;
+  }
+};
+
+// Trainers API functions
+export const trainersApi = {
+  getTrainers: async (params = {}) => {
+    const response = await apiClient.get('/trainers', { params });
+    return response.data.data || [];
+  },
+  
+  getTrainer: async (id) => {
+    const response = await apiClient.get(`/trainers/${id}`);
+    return response.data.data;
+  },
+  
+  createTrainer: async (trainerData) => {
+    const response = await apiClient.post('/trainers', trainerData);
+    return response.data.data;
+  },
+  
+  updateTrainer: async (id, trainerData) => {
+    const response = await apiClient.put(`/trainers/${id}`, trainerData);
+    return response.data.data;
+  },
+  
+  deleteTrainer: async (id) => {
+    const response = await apiClient.delete(`/trainers/${id}`);
     return response.data;
   },
   
-  updateProfile: async (data) => {
-    const response = await api.put('/profile', data);
+  getAvailability: async () => {
+    const response = await apiClient.get('/trainer/availability');
+    return response.data.data;
+  },
+  
+  updateAvailability: async (availabilityData) => {
+    const response = await apiClient.post('/trainer/availability', availabilityData);
     return response.data.data;
   }
 };
 
-// Trainers API - specific trainer functions
-export const trainersApi = {
-  getAvailability: async () => {
-    const response = await api.get('/trainer/availability');
+// Members API functions
+export const membersApi = {
+  getMembers: async (params = {}) => {
+    const response = await apiClient.get('/members', { params });
     return response.data.data || [];
   },
   
-  updateAvailability: async (data) => {
-    const response = await api.post('/trainer/availability', data);
+  getMember: async (id) => {
+    const response = await apiClient.get(`/members/${id}`);
     return response.data.data;
+  },
+  
+  createMember: async (memberData) => {
+    const response = await apiClient.post('/members', memberData);
+    return response.data.data;
+  },
+  
+  updateMember: async (id, memberData) => {
+    const response = await apiClient.put(`/members/${id}`, memberData);
+    return response.data.data;
+  },
+  
+  deleteMember: async (id) => {
+    const response = await apiClient.delete(`/members/${id}`);
+    return response.data;
   }
 };
 
-// Members API - specific member functions
-export const membersApi = {
-  // Add any member-specific functions here
-};
-
-// Notifications API
+// Notifications API functions
 export const notificationsApi = {
   getNotifications: async () => {
-    const response = await api.get('/notifications');
+    const response = await apiClient.get('/notifications');
     return response.data.data || [];
   },
   
-  markAsRead: async (notificationId) => {
-    const response = await api.patch(`/notifications/${notificationId}/read`);
-    return response.data.data;
+  markAsRead: async (id) => {
+    const response = await apiClient.patch(`/notifications/${id}/read`);
+    return response.data;
   }
 };
 
-// Equipment API
+// Equipment API functions
 export const equipmentApi = {
   getEquipment: async () => {
-    const response = await api.get('/equipment');
+    const response = await apiClient.get('/equipment');
     return response.data.data || [];
   }
 };
 
-// Settings API
+// Settings API functions
 export const settingsApi = {
-  getSettings: async () => {
-    const response = await api.get('/settings');
+  getSettings: async (group) => {
+    const params = group ? { group } : {};
+    const response = await apiClient.get('/settings', { params });
     return response.data.data || [];
   },
   
   updateSetting: async (key, value) => {
-    const response = await api.put(`/settings/${key}`, { value });
+    const response = await apiClient.put(`/settings/${key}`, { value });
     return response.data.data;
   }
 };
+
+// Export the API client
+export { apiClient as api };
