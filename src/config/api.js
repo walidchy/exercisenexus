@@ -2,6 +2,7 @@
 // API configuration constants
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 export const USE_MOCK_DATA = false;
+export const MOCK_DATA = {}; // Empty object since we're not using mock data
 
 // Base headers for API requests
 export const getHeaders = (token) => {

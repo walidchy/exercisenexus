@@ -125,21 +125,6 @@ export const activitiesApi = {
   deleteActivity: async (id) => {
     const response = await apiClient.delete(`/activities/${id}`);
     return response.data;
-  },
-  
-  addSchedule: async (activityId, scheduleData) => {
-    const response = await apiClient.post(`/activities/${activityId}/schedules`, scheduleData);
-    return response.data.data;
-  },
-  
-  updateSchedule: async (activityId, scheduleId, scheduleData) => {
-    const response = await apiClient.put(`/activities/${activityId}/schedules/${scheduleId}`, scheduleData);
-    return response.data.data;
-  },
-  
-  deleteSchedule: async (activityId, scheduleId) => {
-    const response = await apiClient.delete(`/activities/${activityId}/schedules/${scheduleId}`);
-    return response.data;
   }
 };
 
@@ -155,11 +140,6 @@ export const bookingsApi = {
     return response.data.data;
   },
   
-  getBooking: async (id) => {
-    const response = await apiClient.get(`/bookings/${id}`);
-    return response.data.data;
-  },
-  
   cancelBooking: async (id, reason) => {
     const response = await apiClient.patch(`/bookings/${id}/cancel`, { cancellation_reason: reason });
     return response.data.data;
@@ -171,30 +151,7 @@ export const bookingsApi = {
   }
 };
 
-// Memberships API functions
-export const membershipsApi = {
-  getMembershipPlans: async () => {
-    const response = await apiClient.get('/membership-plans');
-    return response.data.data || [];
-  },
-  
-  getMembershipPlan: async (id) => {
-    const response = await apiClient.get(`/membership-plans/${id}`);
-    return response.data.data;
-  },
-  
-  getUserMembership: async () => {
-    const response = await apiClient.get('/my-membership');
-    return response.data.data;
-  },
-  
-  subscribe: async (planId, paymentMethod) => {
-    const response = await apiClient.post('/subscribe', { membership_plan_id: planId, payment_method: paymentMethod });
-    return response.data.data;
-  }
-};
-
-// User management API functions
+// Users API functions
 export const usersApi = {
   getUsers: async (role) => {
     const params = role ? { role } : {};
@@ -218,106 +175,7 @@ export const usersApi = {
   }
 };
 
-// Trainers API functions
-export const trainersApi = {
-  getTrainers: async (params = {}) => {
-    const response = await apiClient.get('/trainers', { params });
-    return response.data.data || [];
-  },
-  
-  getTrainer: async (id) => {
-    const response = await apiClient.get(`/trainers/${id}`);
-    return response.data.data;
-  },
-  
-  createTrainer: async (trainerData) => {
-    const response = await apiClient.post('/trainers', trainerData);
-    return response.data.data;
-  },
-  
-  updateTrainer: async (id, trainerData) => {
-    const response = await apiClient.put(`/trainers/${id}`, trainerData);
-    return response.data.data;
-  },
-  
-  deleteTrainer: async (id) => {
-    const response = await apiClient.delete(`/trainers/${id}`);
-    return response.data;
-  },
-  
-  getAvailability: async () => {
-    const response = await apiClient.get('/trainer/availability');
-    return response.data.data;
-  },
-  
-  updateAvailability: async (availabilityData) => {
-    const response = await apiClient.post('/trainer/availability', availabilityData);
-    return response.data.data;
-  }
-};
-
-// Members API functions
-export const membersApi = {
-  getMembers: async (params = {}) => {
-    const response = await apiClient.get('/members', { params });
-    return response.data.data || [];
-  },
-  
-  getMember: async (id) => {
-    const response = await apiClient.get(`/members/${id}`);
-    return response.data.data;
-  },
-  
-  createMember: async (memberData) => {
-    const response = await apiClient.post('/members', memberData);
-    return response.data.data;
-  },
-  
-  updateMember: async (id, memberData) => {
-    const response = await apiClient.put(`/members/${id}`, memberData);
-    return response.data.data;
-  },
-  
-  deleteMember: async (id) => {
-    const response = await apiClient.delete(`/members/${id}`);
-    return response.data;
-  }
-};
-
-// Notifications API functions
-export const notificationsApi = {
-  getNotifications: async () => {
-    const response = await apiClient.get('/notifications');
-    return response.data.data || [];
-  },
-  
-  markAsRead: async (id) => {
-    const response = await apiClient.patch(`/notifications/${id}/read`);
-    return response.data;
-  }
-};
-
-// Equipment API functions
-export const equipmentApi = {
-  getEquipment: async () => {
-    const response = await apiClient.get('/equipment');
-    return response.data.data || [];
-  }
-};
-
-// Settings API functions
-export const settingsApi = {
-  getSettings: async (group) => {
-    const params = group ? { group } : {};
-    const response = await apiClient.get('/settings', { params });
-    return response.data.data || [];
-  },
-  
-  updateSetting: async (key, value) => {
-    const response = await apiClient.put(`/settings/${key}`, { value });
-    return response.data.data;
-  }
-};
-
 // Export the API client
 export { apiClient as api };
+
+export default apiClient;

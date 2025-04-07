@@ -1,10 +1,10 @@
 
-import { api } from "./api";
+import { usersApi } from "./api";
 
 export const trainerService = {
-  getTrainers: async (token) => {
+  getTrainers: async () => {
     try {
-      const response = await api.getUsers("trainer");
+      const response = await usersApi.getUsers("trainer");
       // Transform the data to match our Trainer interface
       return response.map((user) => ({
         id: user.id,
@@ -25,8 +25,8 @@ export const trainerService = {
 
   addTrainer: async (trainerData) => {
     try {
-      // In a real app, we would call the API to create a trainer
-      const response = await api.client.post('/trainers', trainerData);
+      // Call the API to create a trainer
+      const response = await apiClient.post('/trainers', trainerData);
       return response.data.data;
     } catch (error) {
       console.error("Error adding trainer:", error);
@@ -37,7 +37,7 @@ export const trainerService = {
   updateTrainer: async (trainerId, trainerData) => {
     try {
       // Call the API to update the trainer
-      const response = await api.client.put(`/trainers/${trainerId}`, trainerData);
+      const response = await apiClient.put(`/trainers/${trainerId}`, trainerData);
       return response.data.data;
     } catch (error) {
       console.error("Error updating trainer:", error);
@@ -48,7 +48,7 @@ export const trainerService = {
   deleteTrainer: async (trainerId) => {
     try {
       // Call the API to delete the trainer
-      await api.client.delete(`/trainers/${trainerId}`);
+      await apiClient.delete(`/trainers/${trainerId}`);
       return;
     } catch (error) {
       console.error("Error deleting trainer:", error);
@@ -56,3 +56,6 @@ export const trainerService = {
     }
   }
 };
+
+// Add missing import
+import apiClient from "./api";

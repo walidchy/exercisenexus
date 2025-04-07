@@ -8,13 +8,7 @@ import {
   authApi, 
   activitiesApi, 
   bookingsApi, 
-  membershipsApi, 
-  usersApi, 
-  trainersApi, 
-  membersApi, 
-  notificationsApi, 
-  equipmentApi, 
-  settingsApi 
+  usersApi 
 } from "../../services/api";
 
 // Re-export everything from the base api for frontend use
@@ -38,22 +32,10 @@ export const api = {
   cancelBooking: bookingsApi.cancelBooking,
   completeBooking: bookingsApi.completeBooking,
   
-  getMembershipPlans: membershipsApi.getMembershipPlans,
-  getUserMembership: membershipsApi.getUserMembership,
-  subscribe: membershipsApi.subscribe,
-  
   getUsers: usersApi.getUsers,
   verifyUser: usersApi.verifyUser,
   rejectUser: usersApi.rejectUser,
   updateUserProfile: usersApi.updateProfile,
-  
-  getNotifications: notificationsApi.getNotifications,
-  markNotificationAsRead: notificationsApi.markAsRead,
-  
-  getEquipment: equipmentApi.getEquipment,
-  
-  getSettings: settingsApi.getSettings,
-  updateSetting: settingsApi.updateSetting,
   
   // Raw API client for direct access if needed
   client: apiClient
